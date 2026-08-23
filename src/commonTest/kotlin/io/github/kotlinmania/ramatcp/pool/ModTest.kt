@@ -105,7 +105,7 @@ class ModTest {
     fun testErrorReturnedFromEmptyTcpStreamConnectorPool() {
         val connectors: List<MockConnector> = emptyList()
         val randomConnectorPool = TcpStreamConnectorPool.newRoundRobin(connectors)
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<PoolError> {
             runSync {
                 randomConnectorPool.connect(SocketAddress.parse("127.0.0.1:8080"))
             }
