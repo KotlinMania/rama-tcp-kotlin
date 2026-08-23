@@ -4,14 +4,14 @@ Based on AST analysis, here are the concrete next steps.
 
 ## Summary
 
-- **Files Present:** 0/12 (0.0%)
+- **Files Present:** 1/12 (8.3%)
 - **Function parity:** 0/71 matched — 0.0%
 - **Class/type parity:** 0/21 matched — 0.0%
 - **Combined symbol parity:** 0/92 matched — 0.0%
 - **Average inline-code cosine:** 0.00 (function body across 0 matched files)
 - **Average documentation cosine:** 0.00 (doc text across 0 matched files)
-- **Cheat-zeroed Files:** 0
-- **Critical Issues:** 0 files with <0.60 function similarity
+- **Cheat-zeroed Files:** 1
+- **Critical Issues:** 1 files with <0.60 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -27,6 +27,17 @@ No missing high-value files detected.
 
 Every matched file is listed below with function and type symbol parity.
 
+### 1. lib
+
+- **Target:** `ramatcp.Lib [STUB]`
+- **Similarity:** 0.00
+- **Dependents:** 0
+- **Priority Score:** 10.0
+- **Functions:** 0/0 matched
+- **Missing functions:** _none_
+- **Types:** 0/0 matched
+- **Missing types:** _none_
+
 ## Success Criteria
 
 For each file to be considered "complete":
@@ -36,16 +47,6 @@ For each file to be considered "complete":
 - Documentation ported
 - port-lint header present
 
-## Next Commands
-
-```bash
-# Initialize task queue for systematic porting
-cd tools/ast_distance
-./ast_distance --init-tasks ../../tmp/rama-tcp/src rust ../../src/commonMain/kotlin/io/github/kotlinmania/ramatcp kotlin tasks.json ../../AGENTS.md
-
-# Get next high-priority task
-./ast_distance --assign tasks.json <agent-id>
-```
 ## Reexport / Wiring Modules
 
 These files match `reexport_modules` patterns in `.ast_distance_config.json`. They are filtered out of
@@ -59,7 +60,6 @@ do not treat them as the next implementation target by default.
 |--------|-----------------|------|-------------|---------------|
 | `client.mod` | `client.Mod` | 0 | `client/mod.rs` | `client/Mod.kt` |
 | `service.mod` | `client.service.Mod` | 0 | `client/service/mod.rs` | `client/service/Mod.kt` |
-| `lib` | `Lib` | 0 | `lib.rs` | `Lib.kt` |
 | `pool.mod` | `pool.Mod` | 0 | `pool/mod.rs` | `pool/Mod.kt` |
 | `server.mod` | `server.Mod` | 0 | `server/mod.rs` | `server/Mod.kt` |
 

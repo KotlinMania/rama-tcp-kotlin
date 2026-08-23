@@ -1,0 +1,75 @@
+// port-lint: source client/service/connector.rs
+package io.github.kotlinmania.ramatcp.client.service
+
+import io.github.kotlinmania.ramatcp.TcpStream
+import io.github.kotlinmania.ramatcp.client.DefaultDnsResolver
+import io.github.kotlinmania.ramatcp.client.DefaultTcpStreamConnector
+import io.github.kotlinmania.ramatcp.client.DnsResolver
+import io.github.kotlinmania.ramatcp.client.Request
+import io.github.kotlinmania.ramatcp.client.TcpStreamConnector
+import io.github.kotlinmania.ramatcp.client.tcpConnect
+
+/**
+ * Result of establishing a client connection.
+ */
+public data class EstablishedClientConnection<Stream, Input>(
+    public val input: Input,
+    public val conn: Stream,
+)
+
+/**
+ * A connector which can be used to establish a TCP connection to a server.
+ */
+public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory<*>>(
+    public val dns: Dns,
+    public val connectorFactory: Factory,
+) {
+    /**
+     * Consume this connector to attach the given DNS resolver.
+     */
+    public fun <OtherDns : DnsResolver> withDns(otherDns: OtherDns): TcpConnector<OtherDns, Factory> =
+        TcpConnector(dns = otherDns, connectorFactory = connectorFactory)
+
+    /**
+     * Consume this connector to attach the given connector.
+     */
+    public fun <C : TcpStreamConnector> withConnector(
+        connector: C,
+    ): TcpConnector<Dns, TcpStreamConnectorCloneFactory<C>> =
+        TcpConnector(dns = dns, connectorFactory = TcpStreamConnectorCloneFactory(connector))
+
+    /**
+     * Consume this connector to attach the given factory.
+     */
+    public fun <OtherFactory : TcpStreamConnectorFactory<*>> withConnectorFactory(
+        factory: OtherFactory,
+    ): TcpConnector<Dns, OtherFactory> =
+        TcpConnector(dns = dns, connectorFactory = factory)
+
+    /**
+     * Establish a TCP client connection for the given request.
+     */
+    public suspend fun connect(request: Request): EstablishedClientConnection<TcpStream, Request> {
+        val created = connectorFactory.makeConnector()
+        val connector = created.connector
+        val (stream, _) =
+            tcpConnect(
+                extensions = request.extensions,
+                address = request.authority,
+                dns = dns,
+                connector = connector,
+            )
+        return EstablishedClientConnection(input = request, conn = stream)
+    }
+
+    public companion object {
+        /**
+         * Create a new default TcpConnector.
+         */
+        public fun new(): TcpConnector<DefaultDnsResolver, TcpStreamConnectorCloneFactory<DefaultTcpStreamConnector>> =
+            TcpConnector(
+                dns = DefaultDnsResolver(),
+                connectorFactory = TcpStreamConnectorCloneFactory(DefaultTcpStreamConnector()),
+            )
+    }
+}

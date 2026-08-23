@@ -11,10 +11,7 @@ package io.github.kotlinmania.ramatcp
  * - GitHub: https://github.com/plabayo/rama
  * - Book: https://ramaproxy.org/book/
  */
-
-// Upstream module and re-export ledger:
-// pub mod client;
-// pub mod pool;
-// pub mod server;
-// pub mod stream;
-// pub use stream::{TcpStream, TokioTcpStream};
+public object RamaTcp {
+    /** Version string matching the crate specification. */
+    public const val VERSION: String = "0.2.0"
+}
