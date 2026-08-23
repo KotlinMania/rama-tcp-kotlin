@@ -48,4 +48,44 @@ class ConnectTest {
         assertEquals(9000u.toUShort(), socketAddr.port)
         assertEquals(SocketAddress.localIpv4(50000u), stream.localAddr())
     }
+
+    @Test
+    fun testSocketAddressConnectorAndDnsOverwrite() {
+        val ext = Extensions()
+        ext.insert(DnsOverwrite(mapOf("my.service" to listOf("10.0.0.1"))))
+
+        val bindAddr = SocketAddress.localIpv4(33333u)
+        val connector = SocketAddressConnector(bindAddr)
+        val (stream, targetAddr) =
+            runSync {
+                tcpConnect(
+                    extensions = ext,
+                    address = HostWithPort("my.service", 80u),
+                    connector = connector,
+                )
+            }
+
+        assertEquals("10.0.0.1", targetAddr.ip)
+        assertEquals(80u.toUShort(), targetAddr.port)
+        assertEquals(bindAddr, stream.localAddr())
+
+        val branchStream =
+            runSync {
+                tcpConnectInnerBranch(
+                    extensions = ext,
+                    domain = "localhost",
+                    port = 80u,
+                    dns = DefaultDnsResolver(),
+                    connector = connector,
+                    ipKind = IpKind.V4,
+                )
+            }
+        assertEquals(bindAddr, branchStream.first.localAddr())
+
+        val optsStream =
+            runSync {
+                tcpConnectWithSocketOpts(null, SocketAddress.localIpv4(80u))
+            }
+        assertNotNull(optsStream)
+    }
 }

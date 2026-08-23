@@ -72,5 +72,13 @@ class StreamTest {
         assertNotNull(stream.extensions())
         assertEquals(local, stream.localAddr())
         assertEquals(peer, stream.peerAddr())
+
+        assertEquals(5, stream.pollRead(ByteArray(5)))
+        assertEquals(5, stream.pollWrite(ByteArray(5)))
+        assertEquals(10, stream.pollWriteVectored(listOf(ByteArray(5), ByteArray(5))))
+        assertTrue(stream.pollFlush())
+        assertTrue(stream.pollShutdown())
+        assertFalse(stream.isWriteVectored())
+        assertNull(stream.toTokioTcpStream())
     }
 }

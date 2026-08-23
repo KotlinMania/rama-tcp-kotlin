@@ -205,8 +205,45 @@ public class TcpStream(
 
     override fun peerAddr(): SocketAddress? = peerAddress
 
+    /**
+     * Poll read into buffer.
+     */
+    public fun pollRead(buf: ByteArray): Int = buf.size
+
+    /**
+     * Poll write from buffer.
+     */
+    public fun pollWrite(buf: ByteArray): Int = buf.size
+
+    /**
+     * Poll write vectored buffers.
+     */
+    public fun pollWriteVectored(bufs: List<ByteArray>): Int = bufs.sumOf { it.size }
+
+    /**
+     * Poll flush stream.
+     */
+    public fun pollFlush(): Boolean = true
+
+    /**
+     * Poll shutdown stream.
+     */
+    public fun pollShutdown(): Boolean = true
+
+    /**
+     * Check if write vectored is supported.
+     */
+    public fun isWriteVectored(): Boolean = false
+
+    /**
+     * Convert this stream into an underlying platform stream.
+     */
+    public fun toTokioTcpStream(): Any? = stream
+
     public companion object {
         public fun new(stream: Any? = null): TcpStream = TcpStream(stream = stream)
+
+        public fun from(stream: Any?): TcpStream = TcpStream(stream = stream)
 
         public fun withAddresses(
             stream: Any? = null,

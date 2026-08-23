@@ -37,6 +37,27 @@ public class FunctionTcpStreamConnector(
 }
 
 /**
+ * TCP stream connector bound to a specific local socket address.
+ */
+public class SocketAddressConnector(
+    public val bindAddress: SocketAddress,
+) : TcpStreamConnector {
+    override suspend fun connect(addr: SocketAddress): TcpStream =
+        TcpStream.withAddresses(
+            localAddress = bindAddress,
+            peerAddress = addr,
+        )
+}
+
+/**
+ * IP kind: IPv4 or IPv6.
+ */
+public enum class IpKind {
+    V4,
+    V6,
+}
+
+/**
  * IP connection mode preferences.
  */
 public enum class ConnectIpMode {
@@ -44,6 +65,13 @@ public enum class ConnectIpMode {
     Ipv4,
     Ipv6,
 }
+
+/**
+ * DNS overwrite extension entry.
+ */
+public data class DnsOverwrite(
+    public val mappings: Map<String, List<String>>,
+)
 
 /**
  * Simple DNS resolver interface.
@@ -62,6 +90,18 @@ public class DefaultDnsResolver : DnsResolver {
             else -> listOf(host)
         }
 }
+
+/**
+ * Establish a TcpStream connection using custom socket options.
+ */
+public suspend fun tcpConnectWithSocketOpts(
+    opts: Any?,
+    addr: SocketAddress,
+): TcpStream =
+    TcpStream.withAddresses(
+        localAddress = SocketAddress.localIpv4(0u),
+        peerAddress = addr,
+    )
 
 /**
  * Establish a TcpStream connection for the given HostWithPort using default settings.
@@ -85,12 +125,29 @@ public suspend fun tcpConnect(
     address: HostWithPort,
     dns: DnsResolver = DefaultDnsResolver(),
     connector: TcpStreamConnector = DefaultTcpStreamConnector(),
-): Pair<TcpStream, SocketAddress> {
-    val ipMode = extensions.get<ConnectIpMode>() ?: ConnectIpMode.Dual
-    val host = address.host
-    val port = address.port
+): Pair<TcpStream, SocketAddress> =
+    tcpConnectInner(
+        extensions = extensions,
+        domain = address.host,
+        port = address.port,
+        dns = dns,
+        connector = connector,
+    )
 
-    val resolvedIps = dns.resolve(host)
+/**
+ * Internal connection helper resolving domain and delegating to connector.
+ */
+public suspend fun tcpConnectInner(
+    extensions: Extensions,
+    domain: String,
+    port: UShort,
+    dns: DnsResolver = DefaultDnsResolver(),
+    connector: TcpStreamConnector = DefaultTcpStreamConnector(),
+): Pair<TcpStream, SocketAddress> {
+    val overwrite = extensions.get<DnsOverwrite>()
+    val resolvedIps = overwrite?.mappings?.get(domain) ?: dns.resolve(domain)
+    val ipMode = extensions.get<ConnectIpMode>() ?: ConnectIpMode.Dual
+
     val candidate =
         resolvedIps.firstOrNull { ip ->
             when (ipMode) {
@@ -98,7 +155,32 @@ public suspend fun tcpConnect(
                 ConnectIpMode.Ipv4 -> !ip.contains(':')
                 ConnectIpMode.Ipv6 -> ip.contains(':')
             }
-        } ?: resolvedIps.firstOrNull() ?: host
+        } ?: resolvedIps.firstOrNull() ?: domain
+
+    val socketAddr = SocketAddress(candidate, port)
+    val stream = connector.connect(socketAddr)
+    return Pair(stream, socketAddr)
+}
+
+/**
+ * Internal branch connection helper for a specific IP kind.
+ */
+public suspend fun tcpConnectInnerBranch(
+    extensions: Extensions,
+    domain: String,
+    port: UShort,
+    dns: DnsResolver,
+    connector: TcpStreamConnector,
+    ipKind: IpKind,
+): Pair<TcpStream, SocketAddress> {
+    val resolvedIps = dns.resolve(domain)
+    val candidate =
+        resolvedIps.firstOrNull { ip ->
+            when (ipKind) {
+                IpKind.V4 -> !ip.contains(':')
+                IpKind.V6 -> ip.contains(':')
+            }
+        } ?: resolvedIps.firstOrNull() ?: domain
 
     val socketAddr = SocketAddress(candidate, port)
     val stream = connector.connect(socketAddr)

@@ -9,45 +9,48 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.random.Random
 
 /**
- * Selection algorithms for connector pooling.
+ * Pool error type.
+ */
+public class PoolError(
+    message: String,
+) : Exception(message)
+
+/**
+ * Selection algorithms
  */
 @OptIn(ExperimentalAtomicApi::class)
 public sealed class Selector {
     /**
-     * Round-robin connector selector with atomic counter.
+     * Round-robin selection using atomic counter.
      */
     public class RoundRobin(
-        private val counter: AtomicInt = AtomicInt(0),
-    ) : Selector() {
-        override fun <C> next(connectors: List<C>): C? {
-            if (connectors.isEmpty()) return null
-            val count = counter.fetchAndAdd(1)
-            val positiveIndex = (count and 0x7FFFFFFF) % connectors.size
-            return connectors[positiveIndex]
-        }
-    }
+        public val atomicUsize: AtomicInt = AtomicInt(0),
+    ) : Selector()
 
     /**
-     * Random connector selector.
+     * Random selection.
      */
-    public data object RandomSelector : Selector() {
-        override fun <C> next(connectors: List<C>): C? {
-            if (connectors.isEmpty()) return null
-            val idx = Random.nextInt(connectors.size)
-            return connectors[idx]
-        }
-    }
+    public data object Random : Selector()
 
     /**
      * Select the next connector from the given list.
      */
-    public abstract fun <C> next(connectors: List<C>): C?
+    public fun <C> next(connectors: List<C>): C? {
+        if (connectors.isEmpty()) {
+            return null
+        }
+        val selection =
+            when (this) {
+                is RoundRobin -> (atomicUsize.fetchAndAdd(1) and 0x7FFFFFFF)
+                is Random -> kotlin.random.Random.nextInt(Int.MAX_VALUE)
+            }
+        val idx = selection % connectors.size
+        return connectors[idx]
+    }
 
     public companion object {
-        /** Create a new random selector. */
-        public fun newRandom(): Selector = RandomSelector
+        public fun newRandom(): Selector = Random
 
-        /** Create a new round-robin selector. */
         public fun newRoundRobin(): Selector = RoundRobin()
     }
 }
@@ -62,7 +65,7 @@ public class TcpStreamConnectorPool<C : TcpStreamConnector>(
     override suspend fun connect(addr: SocketAddress): TcpStream {
         val connector =
             selector.next(connectors)
-                ?: throw IllegalStateException("TcpStreamConnectorPool has empty connectors collection")
+                ?: throw PoolError("TcpStreamConnectorPool has empty connectors collection")
         return connector.connect(addr)
     }
 

@@ -46,4 +46,19 @@ class ConnectorTest {
         assertNotNull(established.conn)
         assertEquals(SocketAddress.localIpv4(44444u), established.conn.localAddr())
     }
+
+    @Test
+    fun testTcpConnectorWithProxyAndTarget() {
+        val connector = TcpConnector.default()
+
+        val reqProxy = Request.new(HostWithPort("target.internal", 80u))
+        reqProxy.extensions.insert(ProxyAddress(HostWithPort("127.0.0.1", 8888u)))
+        val establishedProxy = runSync { connector.serve(reqProxy) }
+        assertNotNull(establishedProxy.conn)
+
+        val reqTarget = Request.new(HostWithPort("target.internal", 80u))
+        reqTarget.extensions.insert(ConnectorTarget(HostWithPort("127.0.0.1", 9999u)))
+        val establishedTarget = runSync { connector.serve(reqTarget) }
+        assertNotNull(establishedTarget.conn)
+    }
 }

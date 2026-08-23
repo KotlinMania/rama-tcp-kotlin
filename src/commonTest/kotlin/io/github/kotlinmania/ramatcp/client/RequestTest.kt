@@ -6,6 +6,7 @@ import io.github.kotlinmania.ramatcp.HostWithPort
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class RequestTest {
     @Test
@@ -27,5 +28,26 @@ class RequestTest {
         ext.insert("custom-token")
         val reqWithExt = Request.newWithExtensions(authority, ext)
         assertEquals("custom-token", reqWithExt.extensions().get<String>())
+    }
+
+    @Test
+    fun testTransportContextConversion() {
+        val authority = HostWithPort("example.com", 443u)
+        val req = Request.new(authority).protocol(Protocol.Https).httpVersion(HttpVersion.H2)
+
+        val ctx = req.toTransportContext()
+        assertEquals(TransportProtocol.Tcp, ctx.protocol)
+        assertEquals(Protocol.Https, ctx.appProtocol)
+        assertEquals(HttpVersion.H2, ctx.httpVersion)
+        assertEquals(authority, ctx.authority)
+
+        val res = req.tryRefIntoTransportContext()
+        assertTrue(res.isSuccess)
+        assertEquals(ctx, res.getOrNull())
+
+        val fromCtx = Request.from(ctx)
+        assertEquals(req.authority, fromCtx.authority)
+        assertEquals(req.protocol, fromCtx.protocol)
+        assertEquals(req.httpVersion, fromCtx.httpVersion)
     }
 }

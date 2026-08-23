@@ -1,6 +1,8 @@
 // port-lint: source client/service/connector.rs
 package io.github.kotlinmania.ramatcp.client.service
 
+import io.github.kotlinmania.ramatcp.HostWithPort
+import io.github.kotlinmania.ramatcp.SocketAddress
 import io.github.kotlinmania.ramatcp.TcpStream
 import io.github.kotlinmania.ramatcp.client.DefaultDnsResolver
 import io.github.kotlinmania.ramatcp.client.DefaultTcpStreamConnector
@@ -8,6 +10,28 @@ import io.github.kotlinmania.ramatcp.client.DnsResolver
 import io.github.kotlinmania.ramatcp.client.Request
 import io.github.kotlinmania.ramatcp.client.TcpStreamConnector
 import io.github.kotlinmania.ramatcp.client.tcpConnect
+
+/**
+ * Proxy address extension.
+ */
+public data class ProxyAddress(
+    public val address: HostWithPort,
+)
+
+/**
+ * Connector target override extension.
+ */
+public data class ConnectorTarget(
+    public val target: HostWithPort,
+)
+
+/**
+ * Client socket info recording local and peer addresses.
+ */
+public data class ClientSocketInfo(
+    public val local: SocketAddress?,
+    public val peer: SocketAddress,
+)
 
 /**
  * Result of establishing a client connection.
@@ -52,15 +76,49 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
     public suspend fun connect(request: Request): EstablishedClientConnection<TcpStream, Request> {
         val created = connectorFactory.makeConnector()
         val connector = created.connector
-        val (stream, _) =
+
+        val proxy = request.extensions.get<ProxyAddress>()
+        if (proxy != null) {
+            val (stream, addr) =
+                tcpConnect(
+                    extensions = request.extensions,
+                    address = proxy.address,
+                    dns = dns,
+                    connector = connector,
+                )
+            stream.extensions.insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
+            return EstablishedClientConnection(input = request, conn = stream)
+        }
+
+        val target = request.extensions.get<ConnectorTarget>()
+        if (target != null) {
+            val (stream, addr) =
+                tcpConnect(
+                    extensions = request.extensions,
+                    address = target.target,
+                    dns = dns,
+                    connector = connector,
+                )
+            stream.extensions.insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
+            return EstablishedClientConnection(input = request, conn = stream)
+        }
+
+        val (stream, addr) =
             tcpConnect(
                 extensions = request.extensions,
                 address = request.authority,
                 dns = dns,
                 connector = connector,
             )
+        stream.extensions.insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
         return EstablishedClientConnection(input = request, conn = stream)
     }
+
+    /**
+     * Serve a client connection request.
+     */
+    public suspend fun serve(input: Request): EstablishedClientConnection<TcpStream, Request> =
+        connect(input)
 
     public companion object {
         /**
@@ -71,5 +129,21 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
                 dns = DefaultDnsResolver(),
                 connectorFactory = TcpStreamConnectorCloneFactory(DefaultTcpStreamConnector()),
             )
+
+        /**
+         * Create a default TcpConnector.
+         */
+        public fun default(): TcpConnector<DefaultDnsResolver, TcpStreamConnectorCloneFactory<DefaultTcpStreamConnector>> =
+            new()
     }
 }
+
+/**
+ * Connector output type alias.
+ */
+public typealias ConnectorOutput = EstablishedClientConnection<TcpStream, Request>
+
+/**
+ * Connector error type alias.
+ */
+public typealias ConnectorError = Exception
