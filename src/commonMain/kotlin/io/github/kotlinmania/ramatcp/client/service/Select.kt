@@ -8,7 +8,7 @@ import io.github.kotlinmania.ramatcp.client.TcpStreamConnector
  * Contains a Connector created by a [TcpStreamConnectorFactory],
  * together with the context used to create it in relation to.
  */
-public data class CreatedTcpStreamConnector<Connector : TcpStreamConnector>(
+public data class CreatedTcpStreamConnector<out Connector : TcpStreamConnector>(
     public val connector: Connector,
 )
 

@@ -60,16 +60,6 @@ public class TcpListener(
     private val inner: Any? = null,
 ) {
     /**
-     * Returns the local address that this listener is bound to.
-     */
-    public fun localAddr(): SocketAddress = localAddr
-
-    /**
-     * Gets the value of the IP_TTL option for this socket.
-     */
-    public fun ttl(): UInt? = ttl
-
-    /**
      * Converts this [TcpListener] into a standard platform socket.
      */
     public fun intoStd(): Any? = inner

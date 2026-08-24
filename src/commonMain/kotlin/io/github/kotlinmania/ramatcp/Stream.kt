@@ -94,7 +94,7 @@ public class Extensions {
  * Trait implemented by types that provide read access to Extensions.
  */
 public interface ExtensionsRef {
-    public fun extensions(): Extensions
+    public val extensions: Extensions
 }
 
 /**
@@ -138,18 +138,30 @@ public data class SocketAddress(
         public fun parse(s: String): SocketAddress {
             val lastColon = s.lastIndexOf(':')
             require(lastColon != -1) { "missing port in socket address: $s" }
-            val rawHost = s.substring(0, lastColon)
             val portStr = s.substring(lastColon + 1)
-            val port = portStr.toUShortOrNull() ?: throw IllegalArgumentException("invalid port: $portStr")
-            val cleanHost =
+            val port = portStr.toUShortOrNull() ?: error("invalid port: $portStr")
+            val rawHost = s.substring(0, lastColon)
+            val ip =
                 if (rawHost.startsWith('[') && rawHost.endsWith(']')) {
                     rawHost.substring(1, rawHost.length - 1)
                 } else {
                     rawHost
                 }
-            return SocketAddress(cleanHost, port)
+            return SocketAddress(ip, port)
         }
     }
+}
+
+/**
+ * Trait to read and write bytes asynchronously.
+ */
+public interface AsyncStream
+
+/**
+ * Trait implemented by connection listeners.
+ */
+public interface Accept {
+    public suspend fun accept(): Result<TcpStream>
 }
 
 /**
@@ -191,14 +203,12 @@ public interface Socket {
  */
 public class TcpStream(
     public val stream: Any? = null,
-    public val extensions: Extensions = Extensions(),
+    override val extensions: Extensions = Extensions(),
     private val localAddress: SocketAddress? = null,
     private val peerAddress: SocketAddress? = null,
 ) : ExtensionsRef,
     ExtensionsMut,
     Socket {
-    override fun extensions(): Extensions = extensions
-
     override fun extensionsMut(): Extensions = extensions
 
     override fun localAddr(): SocketAddress? = localAddress

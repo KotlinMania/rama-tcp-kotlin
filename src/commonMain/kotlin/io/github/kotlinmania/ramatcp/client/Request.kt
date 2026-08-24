@@ -19,7 +19,7 @@ public enum class TransportProtocol {
  */
 public data class TransportContext(
     public val protocol: TransportProtocol = TransportProtocol.Tcp,
-    public val appProtocol: Protocol? = null,
+    public val appProtocol: AppProtocol? = null,
     public val httpVersion: HttpVersion? = null,
     public val authority: HostWithPort,
 )
@@ -27,7 +27,7 @@ public data class TransportContext(
 /**
  * Protocol identifier for application layer hint.
  */
-public enum class Protocol {
+public enum class AppProtocol {
     Http,
     Https,
     Ws,
@@ -53,19 +53,17 @@ public enum class HttpVersion {
  */
 public data class Request(
     public var authority: HostWithPort,
-    public var protocol: Protocol? = null,
+    public var protocol: AppProtocol? = null,
     public var httpVersion: HttpVersion? = null,
-    public var extensions: Extensions = Extensions(),
+    override var extensions: Extensions = Extensions(),
 ) : ExtensionsRef,
     ExtensionsMut {
-    override fun extensions(): Extensions = extensions
-
     override fun extensionsMut(): Extensions = extensions
 
     /**
      * Define the application protocol for this request.
      */
-    public fun protocol(protocol: Protocol?): Request {
+    public fun protocol(protocol: AppProtocol?): Request {
         this.protocol = protocol
         return this
     }

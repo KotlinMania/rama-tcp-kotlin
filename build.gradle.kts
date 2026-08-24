@@ -736,6 +736,25 @@ tasks.register("hostTests") {
     )
 }
 
+tasks.matching { it.name.endsWith("GenerateSPMPackage") }.configureEach {
+    doLast {
+        val spmPackageDir = layout.buildDirectory.dir("SPMPackage").get().asFile
+        if (spmPackageDir.exists()) {
+            spmPackageDir.walkTopDown().filter { it.name == "Package.swift" }.forEach { packageSwift ->
+                val text = packageSwift.readText()
+                if (!text.contains("platforms:")) {
+                    packageSwift.writeText(
+                        text.replaceFirst(
+                            Regex("""(name:\s*"[^"]*",)"""),
+                            "$1\n    platforms: [.macOS(.v14)],",
+                        ),
+                    )
+                }
+            }
+        }
+    }
+}
+
 // Swift Export smoke test — produces the SPM package via embedSwiftExportForXcode
 // (spawned with the Xcode-style env it requires) and runs `swift test` against it,
 // so Swift Export breakage surfaces locally, not only in the swift.yml CI job.

@@ -18,8 +18,8 @@ class RequestTest {
         assertNull(req.protocol)
         assertNull(req.httpVersion)
 
-        req.protocol(Protocol.Https)
-        assertEquals(Protocol.Https, req.protocol)
+        req.protocol(AppProtocol.Https)
+        assertEquals(AppProtocol.Https, req.protocol)
 
         req.httpVersion(HttpVersion.H2)
         assertEquals(HttpVersion.H2, req.httpVersion)
@@ -27,17 +27,17 @@ class RequestTest {
         val ext = Extensions()
         ext.insert("custom-token")
         val reqWithExt = Request.newWithExtensions(authority, ext)
-        assertEquals("custom-token", reqWithExt.extensions().get<String>())
+        assertEquals("custom-token", reqWithExt.extensions.get<String>())
     }
 
     @Test
     fun testTransportContextConversion() {
         val authority = HostWithPort("example.com", 443u)
-        val req = Request.new(authority).protocol(Protocol.Https).httpVersion(HttpVersion.H2)
+        val req = Request.new(authority).protocol(AppProtocol.Https).httpVersion(HttpVersion.H2)
 
         val ctx = req.toTransportContext()
         assertEquals(TransportProtocol.Tcp, ctx.protocol)
-        assertEquals(Protocol.Https, ctx.appProtocol)
+        assertEquals(AppProtocol.Https, ctx.appProtocol)
         assertEquals(HttpVersion.H2, ctx.httpVersion)
         assertEquals(authority, ctx.authority)
 

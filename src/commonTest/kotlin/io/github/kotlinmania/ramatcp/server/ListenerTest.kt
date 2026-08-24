@@ -16,8 +16,8 @@ class ListenerTest {
         val addr = SocketAddress.localIpv4(8080u)
         val listener = runSync { builder.bindAddress(addr) }
 
-        assertEquals(addr, listener.localAddr())
-        assertEquals(64u, listener.ttl())
+        assertEquals(addr, listener.localAddr)
+        assertEquals(64u, listener.ttl)
 
         val (stream, peer) = runSync { listener.accept() }
         assertNotNull(stream)
@@ -28,7 +28,7 @@ class ListenerTest {
     @Test
     fun testTcpListenerBindString() {
         val listener = runSync { TcpListener.bind("127.0.0.1:9090") }
-        assertEquals(SocketAddress.parse("127.0.0.1:9090"), listener.localAddr())
+        assertEquals(SocketAddress.parse("127.0.0.1:9090"), listener.localAddr)
     }
 
     @Test
