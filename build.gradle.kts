@@ -738,19 +738,27 @@ tasks.register("hostTests") {
 
 tasks.matching { it.name.endsWith("GenerateSPMPackage") }.configureEach {
     doLast {
-        val spmPackageDir = layout.buildDirectory.dir("SPMPackage").get().asFile
+        val spmPackageDir =
+            layout
+                .buildDirectory
+                .dir("SPMPackage")
+                .get()
+                .asFile
         if (spmPackageDir.exists()) {
-            spmPackageDir.walkTopDown().filter { it.name == "Package.swift" }.forEach { packageSwift ->
-                val text = packageSwift.readText()
-                if (!text.contains("platforms:")) {
-                    packageSwift.writeText(
-                        text.replaceFirst(
-                            Regex("""(name:\s*"[^"]*",)"""),
-                            "$1\n    platforms: [.macOS(.v14)],",
-                        ),
-                    )
+            spmPackageDir
+                .walkTopDown()
+                .filter { it.name == "Package.swift" }
+                .forEach { packageSwift ->
+                    val text = packageSwift.readText()
+                    if (!text.contains("platforms:")) {
+                        packageSwift.writeText(
+                            text.replaceFirst(
+                                Regex("""(name:\s*"[^"]*",)"""),
+                                "$1\n    platforms: [.macOS(.v14)],",
+                            ),
+                        )
+                    }
                 }
-            }
         }
     }
 }

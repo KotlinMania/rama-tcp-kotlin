@@ -35,7 +35,7 @@ class ForwardTest {
 
         val dynFwd = Forwarder.ctx()
         val dynStream = TcpStream.new()
-        dynStream.extensions.insert(ProxyTarget(target))
+        dynStream.extensions().insert(ProxyTarget(target))
         runSync {
             dynFwd.serve(dynStream)
         }

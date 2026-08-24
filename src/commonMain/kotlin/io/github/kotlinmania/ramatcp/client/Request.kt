@@ -55,10 +55,12 @@ public data class Request(
     public var authority: HostWithPort,
     public var protocol: AppProtocol? = null,
     public var httpVersion: HttpVersion? = null,
-    override var extensions: Extensions = Extensions(),
+    private var extensionsStore: Extensions = Extensions(),
 ) : ExtensionsRef,
     ExtensionsMut {
-    override fun extensionsMut(): Extensions = extensions
+    override fun extensions(): Extensions = extensionsStore
+
+    override fun extensionsMut(): Extensions = extensionsStore
 
     /**
      * Define the application protocol for this request.
@@ -110,7 +112,7 @@ public data class Request(
          * Create a new TCP Request with given Extensions.
          */
         public fun newWithExtensions(authority: HostWithPort, extensions: Extensions): Request =
-            Request(authority = authority, extensions = extensions)
+            Request(authority = authority, extensionsStore = extensions)
 
         /**
          * Convert a [TransportContext] into a [Request].

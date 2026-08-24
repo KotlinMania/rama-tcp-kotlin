@@ -48,11 +48,11 @@ public class Forwarder<C>(
             when (kind) {
                 is ForwarderKind.Static -> kind.target
                 is ForwarderKind.Dynamic ->
-                    source.extensions.get<ProxyTarget>()?.target
+                    source.extensions().get<ProxyTarget>()?.target
                         ?: throw IllegalStateException("missing forward authority")
             }
 
-        val extensions = source.extensions.copy()
+        val extensions = source.extensions().copy()
         val req = Request.newWithExtensions(authority, extensions)
         if (connector is TcpConnector<*, *>) {
             connector.connect(req)

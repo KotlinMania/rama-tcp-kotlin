@@ -27,7 +27,7 @@ class RequestTest {
         val ext = Extensions()
         ext.insert("custom-token")
         val reqWithExt = Request.newWithExtensions(authority, ext)
-        assertEquals("custom-token", reqWithExt.extensions.get<String>())
+        assertEquals("custom-token", reqWithExt.extensions().get<String>())
     }
 
     @Test

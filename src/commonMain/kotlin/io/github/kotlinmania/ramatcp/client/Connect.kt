@@ -173,7 +173,8 @@ public suspend fun tcpConnectInnerBranch(
     connector: TcpStreamConnector,
     ipKind: IpKind,
 ): Pair<TcpStream, SocketAddress> {
-    val resolvedIps = dns.resolve(domain)
+    val overwrite = extensions.get<DnsOverwrite>()
+    val resolvedIps = overwrite?.mappings?.get(domain) ?: dns.resolve(domain)
     val candidate =
         resolvedIps.firstOrNull { ip ->
             when (ipKind) {

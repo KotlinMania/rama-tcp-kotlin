@@ -94,7 +94,7 @@ public class Extensions {
  * Trait implemented by types that provide read access to Extensions.
  */
 public interface ExtensionsRef {
-    public val extensions: Extensions
+    public fun extensions(): Extensions
 }
 
 /**
@@ -203,13 +203,15 @@ public interface Socket {
  */
 public class TcpStream(
     public val stream: Any? = null,
-    override val extensions: Extensions = Extensions(),
+    private val extensionsStore: Extensions = Extensions(),
     private val localAddress: SocketAddress? = null,
     private val peerAddress: SocketAddress? = null,
 ) : ExtensionsRef,
     ExtensionsMut,
     Socket {
-    override fun extensionsMut(): Extensions = extensions
+    override fun extensions(): Extensions = extensionsStore
+
+    override fun extensionsMut(): Extensions = extensionsStore
 
     override fun localAddr(): SocketAddress? = localAddress
 
@@ -263,7 +265,7 @@ public class TcpStream(
         ): TcpStream =
             TcpStream(
                 stream = stream,
-                extensions = extensions,
+                extensionsStore = extensions,
                 localAddress = localAddress,
                 peerAddress = peerAddress,
             )
