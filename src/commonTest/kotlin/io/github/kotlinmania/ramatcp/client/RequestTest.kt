@@ -50,4 +50,37 @@ class RequestTest {
         assertEquals(req.protocol, fromCtx.protocol)
         assertEquals(req.httpVersion, fromCtx.httpVersion)
     }
+
+    @Test
+    fun testSetAndWithMethods() {
+        val auth1 = HostWithPort("example.com", 80u)
+        val auth2 = HostWithPort("api.example.com", 443u)
+        val req = Request.new(auth1)
+
+        req.setProtocol(AppProtocol.Http)
+        assertEquals(AppProtocol.Http, req.protocol)
+
+        req.setHttpVersion(HttpVersion.Http11)
+        assertEquals(HttpVersion.Http11, req.httpVersion)
+
+        req.setAuthority(auth2)
+        assertEquals(auth2, req.authority)
+
+        val withProt = req.withProtocol(AppProtocol.Https)
+        assertEquals(AppProtocol.Https, withProt.protocol)
+        assertEquals(AppProtocol.Http, req.protocol)
+
+        val withVer = req.withHttpVersion(HttpVersion.H2)
+        assertEquals(HttpVersion.H2, withVer.httpVersion)
+        assertEquals(HttpVersion.Http11, req.httpVersion)
+
+        val withAuth = req.withAuthority(auth1)
+        assertEquals(auth1, withAuth.authority)
+        assertEquals(auth2, req.authority)
+
+        val ext = Extensions()
+        ext.insert(42)
+        val withExt = req.withExtensions(ext)
+        assertEquals(42, withExt.extensions().get<Int>())
+    }
 }

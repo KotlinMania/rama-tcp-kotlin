@@ -71,11 +71,70 @@ public data class Request(
     }
 
     /**
+     * Set the application protocol for this request.
+     */
+    public fun setProtocol(protocol: AppProtocol?): Request {
+        this.protocol = protocol
+        return this
+    }
+
+    /**
+     * Return a copy of this request with the specified application protocol.
+     */
+    public fun withProtocol(protocol: AppProtocol?): Request {
+        val copy = this.copy(extensionsStore = extensionsStore.copy())
+        copy.protocol = protocol
+        return copy
+    }
+
+    /**
      * Define the HTTP version as a hint to the application layer.
      */
     public fun httpVersion(version: HttpVersion?): Request {
         this.httpVersion = version
         return this
+    }
+
+    /**
+     * Set the HTTP version as a hint to the application layer.
+     */
+    public fun setHttpVersion(version: HttpVersion?): Request {
+        this.httpVersion = version
+        return this
+    }
+
+    /**
+     * Return a copy of this request with the specified HTTP version.
+     */
+    public fun withHttpVersion(version: HttpVersion?): Request {
+        val copy = this.copy(extensionsStore = extensionsStore.copy())
+        copy.httpVersion = version
+        return copy
+    }
+
+    /**
+     * Set the authority for this request.
+     */
+    public fun setAuthority(authority: HostWithPort): Request {
+        this.authority = authority
+        return this
+    }
+
+    /**
+     * Return a copy of this request with the specified authority.
+     */
+    public fun withAuthority(authority: HostWithPort): Request {
+        val copy = this.copy(extensionsStore = extensionsStore.copy())
+        copy.authority = authority
+        return copy
+    }
+
+    /**
+     * Return a copy of this request with the specified extensions.
+     */
+    public fun withExtensions(extensions: Extensions): Request {
+        val copy = this.copy(extensionsStore = extensions.copy())
+        return copy
     }
 
     /**
