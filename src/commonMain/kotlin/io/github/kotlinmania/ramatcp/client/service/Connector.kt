@@ -36,7 +36,7 @@ public data class ClientSocketInfo(
 /**
  * Result of establishing a client connection.
  */
-public data class EstablishedClientConnection<Stream, Input>(
+public data class EstablishedClientConnection<out Stream, out Input>(
     public val input: Input,
     public val conn: Stream,
 )

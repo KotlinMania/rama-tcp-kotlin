@@ -69,7 +69,7 @@ class StreamTest {
                 peerAddress = peer,
             )
 
-        assertNotNull(stream.extensions())
+        assertNotNull(stream.extensions)
         assertEquals(local, stream.localAddr())
         assertEquals(peer, stream.peerAddr())
 
