@@ -22,7 +22,7 @@ public class TcpListenerBuilder(
      * Creates a new [TcpListener], which will be bound to the specified socket address.
      */
     public suspend fun bindAddress(addr: SocketAddress): TcpListener =
-        TcpListener(localAddr = addr, ttl = ttl)
+        TcpListener(localAddress = addr, timeToLive = ttl)
 
     /**
      * Creates a new [TcpListener], which will be bound to the specified address string.
@@ -55,10 +55,20 @@ public class TcpListenerBuilder(
  * A TCP socket server listening for incoming connections.
  */
 public class TcpListener(
-    public val localAddr: SocketAddress,
-    public val ttl: UInt? = null,
+    public val localAddress: SocketAddress,
+    public val timeToLive: UInt? = null,
     private val inner: Any? = null,
 ) {
+    /**
+     * Returns the local address that this listener is bound to.
+     */
+    public fun localAddr(): SocketAddress = localAddress
+
+    /**
+     * Gets the value of the IP_TTL option for this socket.
+     */
+    public fun ttl(): UInt? = timeToLive
+
     /**
      * Converts this [TcpListener] into a standard platform socket.
      */
@@ -76,7 +86,7 @@ public class TcpListener(
         val peer = SocketAddress.localIpv4(0u)
         val stream =
             TcpStream.withAddresses(
-                localAddress = localAddr,
+                localAddress = localAddress,
                 peerAddress = peer,
             )
         return Pair(stream, peer)
@@ -105,7 +115,9 @@ public class TcpListener(
      * Handle accept error logging and backoff.
      */
     public suspend fun handleAcceptErr(err: Throwable) {
-        // Log accept error
+        if (err.message?.isNotEmpty() == true) {
+            // log error
+        }
     }
 
     /**
@@ -156,7 +168,7 @@ public class TcpListener(
          * Internal socket binding helper.
          */
         public fun bindSocketInternal(socket: Any?): TcpListener =
-            TcpListener(localAddr = SocketAddress.localIpv4(0u), inner = socket)
+            TcpListener(localAddress = SocketAddress.localIpv4(0u), inner = socket)
 
         /**
          * Creates a new [TcpListener] bound to the specified device name.
@@ -168,7 +180,7 @@ public class TcpListener(
          * Construct a [TcpListener] from an underlying platform socket.
          */
         public fun from(inner: Any?): TcpListener =
-            TcpListener(localAddr = SocketAddress.localIpv4(0u), inner = inner)
+            TcpListener(localAddress = SocketAddress.localIpv4(0u), inner = inner)
 
         /**
          * Try to convert a platform socket into a [TcpListener].
@@ -181,4 +193,4 @@ public class TcpListener(
 /**
  * Listener error type alias.
  */
-public typealias Error = Exception
+public typealias ListenerError = Exception

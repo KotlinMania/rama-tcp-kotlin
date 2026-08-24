@@ -77,40 +77,40 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
         val created = connectorFactory.makeConnector()
         val connector = created.connector
 
-        val proxy = request.extensions.get<ProxyAddress>()
+        val proxy = request.extensions().get<ProxyAddress>()
         if (proxy != null) {
             val (stream, addr) =
                 tcpConnect(
-                    extensions = request.extensions,
+                    extensions = request.extensions(),
                     address = proxy.address,
                     dns = dns,
                     connector = connector,
                 )
-            stream.extensions.insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
+            stream.extensions().insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
             return EstablishedClientConnection(input = request, conn = stream)
         }
 
-        val target = request.extensions.get<ConnectorTarget>()
+        val target = request.extensions().get<ConnectorTarget>()
         if (target != null) {
             val (stream, addr) =
                 tcpConnect(
-                    extensions = request.extensions,
+                    extensions = request.extensions(),
                     address = target.target,
                     dns = dns,
                     connector = connector,
                 )
-            stream.extensions.insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
+            stream.extensions().insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
             return EstablishedClientConnection(input = request, conn = stream)
         }
 
         val (stream, addr) =
             tcpConnect(
-                extensions = request.extensions,
+                extensions = request.extensions(),
                 address = request.authority,
                 dns = dns,
                 connector = connector,
             )
-        stream.extensions.insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
+        stream.extensions().insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
         return EstablishedClientConnection(input = request, conn = stream)
     }
 
