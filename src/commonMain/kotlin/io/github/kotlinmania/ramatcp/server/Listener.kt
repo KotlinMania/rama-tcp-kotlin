@@ -194,3 +194,9 @@ public class TcpListener(
  * Listener error type alias.
  */
 public typealias ListenerError = Exception
+
+/**
+ * General error type for listener conversions.
+ */
+public typealias Error = Exception
+

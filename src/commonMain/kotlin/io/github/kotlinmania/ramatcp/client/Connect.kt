@@ -187,3 +187,10 @@ public suspend fun tcpConnectInnerBranch(
     val stream = connector.connect(socketAddr)
     return Pair(stream, socketAddr)
 }
+
+/**
+ * Connector error type alias.
+ */
+public typealias ConnectError = Exception
+
+
