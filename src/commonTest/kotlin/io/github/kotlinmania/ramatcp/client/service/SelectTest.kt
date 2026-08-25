@@ -3,7 +3,6 @@ package io.github.kotlinmania.ramatcp.client.service
 
 import io.github.kotlinmania.ramatcp.SocketAddress
 import io.github.kotlinmania.ramatcp.TcpStream
-import io.github.kotlinmania.ramatcp.client.DefaultTcpStreamConnector
 import io.github.kotlinmania.ramatcp.client.FunctionTcpStreamConnector
 import io.github.kotlinmania.ramatcp.runSync
 import kotlin.test.Test
@@ -23,12 +22,13 @@ class SelectTest {
 
     @Test
     fun testTcpStreamConnectorCloneFactory() {
-        val connector = FunctionTcpStreamConnector { addr ->
-            TcpStream.withAddresses(
-                localAddress = SocketAddress.localIpv4(55555u),
-                peerAddress = addr,
-            )
-        }
+        val connector =
+            FunctionTcpStreamConnector { addr ->
+                TcpStream.withAddresses(
+                    localAddress = SocketAddress.localIpv4(55555u),
+                    peerAddress = addr,
+                )
+            }
         val factory = TcpStreamConnectorCloneFactory(connector)
         val created = runSync { factory.makeConnector() }
         val stream = runSync { created.connector.connect(SocketAddress.localIpv4(80u)) }
