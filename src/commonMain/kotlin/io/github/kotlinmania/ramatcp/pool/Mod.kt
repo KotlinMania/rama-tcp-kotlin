@@ -49,9 +49,13 @@ public sealed class Selector {
     }
 
     public companion object {
-        public fun newRandom(): Selector = Random
+        public fun newRandom(): Selector {
+            return Random
+        }
 
-        public fun newRoundRobin(): Selector = RoundRobin()
+        public fun newRoundRobin(): Selector {
+            return RoundRobin()
+        }
     }
 }
 
@@ -65,7 +69,7 @@ public class TcpStreamConnectorPool<C : TcpStreamConnector>(
     override suspend fun connect(addr: SocketAddress): TcpStream {
         val connector =
             selector.next(connectors)
-                ?: throw PoolError("TcpStreamConnectorPool has empty connectors collection")
+                ?: throw PoolError("cannot select connector from empty collection")
         return connector.connect(addr)
     }
 
@@ -73,19 +77,27 @@ public class TcpStreamConnectorPool<C : TcpStreamConnector>(
         /**
          * Create a pool where each connection is chosen randomly.
          */
-        public fun <C : TcpStreamConnector> newRandom(connectors: List<C>): TcpStreamConnectorPool<C> =
-            TcpStreamConnectorPool(
+        public fun <C : TcpStreamConnector> newRandom(connectors: List<C>): TcpStreamConnectorPool<C> {
+            return TcpStreamConnectorPool(
                 selector = Selector.newRandom(),
                 connectors = connectors,
             )
+        }
 
         /**
          * Create a pool where each connection is chosen using round-robin.
          */
-        public fun <C : TcpStreamConnector> newRoundRobin(connectors: List<C>): TcpStreamConnectorPool<C> =
-            TcpStreamConnectorPool(
+        public fun <C : TcpStreamConnector> newRoundRobin(connectors: List<C>): TcpStreamConnectorPool<C> {
+            return TcpStreamConnectorPool(
                 selector = Selector.newRoundRobin(),
                 connectors = connectors,
             )
+        }
     }
 }
+
+/**
+ * Pool error type alias matching trait Error associated type.
+ */
+public typealias Error = PoolError
+

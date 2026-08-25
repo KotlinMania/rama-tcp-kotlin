@@ -184,3 +184,10 @@ public data class Request(
             )
     }
 }
+
+/**
+ * Error type for infallible request conversions.
+ */
+public typealias RequestError = Nothing
+
+
