@@ -6,8 +6,8 @@ Based on AST analysis, here are the concrete next steps.
 
 - **Files Present:** 12/12 (100.0%)
 - **Function parity:** 66/66 matched (target 134) — 100.0%
-- **Class/type parity:** 16/24 matched (target 72) — 66.7%
-- **Combined symbol parity:** 82/90 matched (target 206) — 91.1%
+- **Class/type parity:** 16/24 matched (target 77) — 66.7%
+- **Combined symbol parity:** 82/90 matched (target 211) — 91.1%
 - **Average inline-code cosine:** 0.43 (function body across 8 matched files)
 - **Average documentation cosine:** 0.60 (doc text across 8 matched files)
 - **Cheat-zeroed Files:** 5
@@ -124,7 +124,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Priority Score:** 10.0
 - **Functions:** 0/0 matched (target 1)
 - **Missing functions:** _none_
-- **Types:** 0/0 matched (target 2)
+- **Types:** 0/0 matched (target 4)
 - **Missing types:** _none_
 
 ### 10. server.mod
@@ -135,7 +135,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Priority Score:** 10.0
 - **Functions:** 0/0 matched
 - **Missing functions:** _none_
-- **Types:** 0/0 matched (target 1)
+- **Types:** 0/0 matched (target 2)
 - **Missing types:** _none_
 
 ### 11. client.mod
@@ -146,7 +146,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Priority Score:** 10.0
 - **Functions:** 0/0 matched
 - **Missing functions:** _none_
-- **Types:** 0/0 matched (target 1)
+- **Types:** 0/0 matched (target 2)
 - **Missing types:** _none_
 
 ### 12. service.mod
@@ -157,7 +157,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Priority Score:** 10.0
 - **Functions:** 0/0 matched
 - **Missing functions:** _none_
-- **Types:** 0/0 matched (target 1)
+- **Types:** 0/0 matched (target 2)
 - **Missing types:** _none_
 
 ## Success Criteria
