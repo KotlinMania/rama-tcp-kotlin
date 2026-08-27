@@ -25,6 +25,10 @@ public class DefaultTcpStreamConnector : TcpStreamConnector {
             localAddress = SocketAddress.localIpv4(0u),
             peerAddress = addr,
         )
+
+    public companion object {
+        public typealias Error = ConnectError
+    }
 }
 
 /**
@@ -192,5 +196,7 @@ public suspend fun tcpConnectInnerBranch(
  * Connector error type alias.
  */
 public typealias ConnectError = Exception
+
+
 
 

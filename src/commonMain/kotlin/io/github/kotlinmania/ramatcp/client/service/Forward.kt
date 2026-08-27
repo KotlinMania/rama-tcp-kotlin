@@ -77,6 +77,9 @@ public class Forwarder<C>(
                 kind = ForwarderKind.Dynamic,
                 connector = TcpConnector.new(),
             )
+
+        public typealias Output = ForwardOutput
+        public typealias Error = ForwardError
     }
 }
 
@@ -94,5 +97,7 @@ public typealias ForwardOutput = Unit
  * Forward error type alias.
  */
 public typealias ForwardError = Exception
+
+
 
 
