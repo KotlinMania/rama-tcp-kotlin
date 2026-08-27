@@ -182,6 +182,11 @@ public data class Request(
                 protocol = context.appProtocol,
                 httpVersion = context.httpVersion,
             )
+
+        /**
+         * Error type for infallible request conversions.
+         */
+        public typealias Error = Nothing
     }
 }
 
@@ -189,5 +194,7 @@ public data class Request(
  * Error type for infallible request conversions.
  */
 public typealias RequestError = Nothing
+
+
 
 

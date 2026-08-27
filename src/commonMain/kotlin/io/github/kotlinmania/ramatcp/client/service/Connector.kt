@@ -135,6 +135,9 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
          */
         public fun default(): TcpConnector<DefaultDnsResolver, TcpStreamConnectorCloneFactory<DefaultTcpStreamConnector>> =
             new()
+
+        public typealias Output = ConnectorOutput
+        public typealias Error = ConnectorError
     }
 }
 
@@ -147,5 +150,7 @@ public typealias ConnectorOutput = EstablishedClientConnection<TcpStream, Reques
  * Connector error type alias.
  */
 public typealias ConnectorError = Exception
+
+
 
 

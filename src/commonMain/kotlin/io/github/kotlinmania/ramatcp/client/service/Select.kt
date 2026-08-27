@@ -44,6 +44,11 @@ public class TcpStreamConnectorCloneFactory<Connector : TcpStreamConnector>(
 ) : TcpStreamConnectorFactory<Connector> {
     override suspend fun makeConnector(): CreatedTcpStreamConnector<Connector> =
         CreatedTcpStreamConnector(connector)
+
+    public companion object {
+        public typealias Connector = FactoryConnector
+        public typealias Error = SelectError
+    }
 }
 
 /**
@@ -55,5 +60,7 @@ public typealias SelectError = Exception
  * Connector type alias for factory definitions.
  */
 public typealias FactoryConnector = TcpStreamConnector
+
+
 
 
