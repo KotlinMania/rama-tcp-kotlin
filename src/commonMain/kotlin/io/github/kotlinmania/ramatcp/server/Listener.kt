@@ -199,4 +199,3 @@ public typealias ListenerError = Exception
  * General error type for listener conversions.
  */
 public typealias Error = Exception
-
