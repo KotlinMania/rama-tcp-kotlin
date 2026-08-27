@@ -15,3 +15,6 @@ public object RamaTcp {
     /** Version string matching the crate specification. */
     public const val VERSION: String = "0.2.0"
 }
+
+public typealias LibTcpStream = TcpStream
+public typealias LibTokioTcpStream = TokioTcpStream
