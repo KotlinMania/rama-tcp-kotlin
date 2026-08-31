@@ -1,4 +1,4 @@
-// port-lint: tests rama-tcp/src/client/service/forward.rs
+// port-lint: tests client/service/forward.rs
 package io.github.kotlinmania.ramatcp.client.service
 
 import io.github.kotlinmania.ramatcp.HostWithPort
