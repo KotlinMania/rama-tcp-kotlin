@@ -1,4 +1,4 @@
-// port-lint: source client/service/mod.rs
+// port-lint: source rama-tcp/src/client/service/mod.rs
 package io.github.kotlinmania.ramatcp.client.service
 
 /**
