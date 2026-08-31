@@ -8,8 +8,8 @@ Based on AST analysis, here are the concrete next steps.
 - **Function parity:** 66/66 matched (target 134) — 100.0%
 - **Class/type parity:** 24/24 matched (target 85) — 100.0%
 - **Combined symbol parity:** 90/90 matched (target 219) — 100.0%
-- **Average inline-code cosine:** 0.50 (function body across 7 matched files)
-- **Average documentation cosine:** 0.55 (doc text across 7 matched files)
+- **Average inline-code cosine:** 0.43 (function body across 8 matched files)
+- **Average documentation cosine:** 0.60 (doc text across 8 matched files)
 - **Cheat-zeroed Files:** 5
 - **Critical Issues:** 10 files with <0.60 function similarity
 
@@ -61,7 +61,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 5/5 matched
 
-### 4. rama-tcp.stream
+### 4. stream
 
 - **Target:** `ramatcp.Stream`
 - **Similarity:** 0.32
@@ -116,9 +116,9 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 5/5 matched (target 9)
 - **Missing types:** _none_
 
-### 9. rama-tcp.lib
+### 9. lib
 
-- **Target:** `ramatcp.Lib [STUB]`
+- **Target:** `ramatcp.Lib [ZERO]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 10.0

@@ -1,4 +1,4 @@
-// port-lint: source rama-tcp/src/server/listener.rs
+// port-lint: source server/listener.rs
 package io.github.kotlinmania.ramatcp.server
 
 import io.github.kotlinmania.ramatcp.SocketAddress

@@ -1,4 +1,4 @@
-// port-lint: tests rama-tcp/src/pool/mod.rs
+// port-lint: tests pool/mod.rs
 package io.github.kotlinmania.ramatcp.pool
 
 import io.github.kotlinmania.ramatcp.SocketAddress
