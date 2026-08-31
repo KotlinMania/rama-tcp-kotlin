@@ -1,4 +1,4 @@
-// port-lint: tests stream.rs
+// port-lint: tests rama-tcp/src/stream.rs
 package io.github.kotlinmania.ramatcp
 
 import kotlin.test.Test

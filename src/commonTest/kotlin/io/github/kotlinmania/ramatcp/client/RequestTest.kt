@@ -1,4 +1,4 @@
-// port-lint: tests client/request.rs
+// port-lint: tests rama-tcp/src/client/request.rs
 package io.github.kotlinmania.ramatcp.client
 
 import io.github.kotlinmania.ramatcp.Extensions
