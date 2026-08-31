@@ -1,4 +1,4 @@
-// port-lint: source client/service/select.rs
+// port-lint: source rama-tcp/src/client/service/select.rs
 package io.github.kotlinmania.ramatcp.client.service
 
 import io.github.kotlinmania.ramatcp.client.DefaultTcpStreamConnector
