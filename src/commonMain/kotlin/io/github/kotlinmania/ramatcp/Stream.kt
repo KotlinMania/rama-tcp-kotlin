@@ -1,4 +1,4 @@
-// port-lint: source rama-tcp/src/stream.rs
+// port-lint: source stream.rs
 package io.github.kotlinmania.ramatcp
 
 import kotlin.reflect.KClass
