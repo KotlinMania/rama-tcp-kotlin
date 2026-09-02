@@ -2,7 +2,7 @@
   "type": "port",
   "name": "rama-tcp-kotlin",
   "source": {
-    "path": "tmp",
+    "path": "tmp/rama-tcp/src",
     "lang": "rust"
   },
   "target": {
