@@ -13,11 +13,11 @@ import io.github.kotlinmania.ramanet.socket.Interface
 import io.github.kotlinmania.ramanet.socket.SocketOptions
 import io.github.kotlinmania.ramanet.stream.SocketInfo
 import io.github.kotlinmania.ramatcp.TcpStream
-import io.github.kotlinmania.socket2.Socket as CoreSocket
 import kotlinx.coroutines.delay
 import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.native.HiddenFromObjC
 import kotlin.time.Duration.Companion.seconds
+import io.github.kotlinmania.socket2.Socket as CoreSocket
 
 /**
  * Builder for [TcpListener].
