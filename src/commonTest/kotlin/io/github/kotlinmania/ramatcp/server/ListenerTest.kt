@@ -1,7 +1,9 @@
 // port-lint: tests server/listener.rs
 package io.github.kotlinmania.ramatcp.server
 
-import io.github.kotlinmania.ramatcp.SocketAddress
+import io.github.kotlinmania.ramanet.address.SocketAddress
+import io.github.kotlinmania.ramanet.socket.Interface
+import io.github.kotlinmania.ramanet.stream.SocketInfo
 import io.github.kotlinmania.ramatcp.runSync
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,9 +28,12 @@ class ListenerTest {
     }
 
     @Test
-    fun testTcpListenerBindString() {
+    fun testTcpListenerBindStringAndInterface() {
         val listener = runSync { TcpListener.bind("127.0.0.1:9090") }
         assertEquals(SocketAddress.parse("127.0.0.1:9090"), listener.localAddr())
+
+        val ifaceListener = runSync { TcpListener.bind(Interface.localIpv4(9092u)) }
+        assertEquals(SocketAddress.localIpv4(9092u), ifaceListener.localAddr())
     }
 
     @Test
@@ -38,6 +43,7 @@ class ListenerTest {
         runSync {
             listener.serve { stream ->
                 assertNotNull(stream)
+                assertNotNull(stream.extensions().get<SocketInfo>())
                 served = true
             }
         }

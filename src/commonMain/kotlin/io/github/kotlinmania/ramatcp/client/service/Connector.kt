@@ -1,8 +1,14 @@
 // port-lint: source client/service/connector.rs
+@file:OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
+
 package io.github.kotlinmania.ramatcp.client.service
 
-import io.github.kotlinmania.ramatcp.HostWithPort
-import io.github.kotlinmania.ramatcp.SocketAddress
+import io.github.kotlinmania.ramanet.address.ProxyAddress
+import io.github.kotlinmania.ramanet.client.ConnectorTarget
+import io.github.kotlinmania.ramanet.client.EstablishedClientConnection
+import io.github.kotlinmania.ramanet.stream.ClientSocketInfo
+import io.github.kotlinmania.ramanet.stream.SocketInfo
+import io.github.kotlinmania.ramanet.transport.TransportProtocol
 import io.github.kotlinmania.ramatcp.TcpStream
 import io.github.kotlinmania.ramatcp.client.DefaultDnsResolver
 import io.github.kotlinmania.ramatcp.client.DefaultTcpStreamConnector
@@ -10,36 +16,8 @@ import io.github.kotlinmania.ramatcp.client.DnsResolver
 import io.github.kotlinmania.ramatcp.client.Request
 import io.github.kotlinmania.ramatcp.client.TcpStreamConnector
 import io.github.kotlinmania.ramatcp.client.tcpConnect
-
-/**
- * Proxy address extension.
- */
-public data class ProxyAddress(
-    public val address: HostWithPort,
-)
-
-/**
- * Connector target override extension.
- */
-public data class ConnectorTarget(
-    public val target: HostWithPort,
-)
-
-/**
- * Client socket info recording local and peer addresses.
- */
-public data class ClientSocketInfo(
-    public val local: SocketAddress?,
-    public val peer: SocketAddress,
-)
-
-/**
- * Result of establishing a client connection.
- */
-public data class EstablishedClientConnection<out Stream, out Input>(
-    public val input: Input,
-    public val conn: Stream,
-)
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.native.HiddenFromObjC
 
 /**
  * A connector which can be used to establish a TCP connection to a server.
@@ -73,6 +51,7 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
     /**
      * Establish a TCP client connection for the given request.
      */
+    @HiddenFromObjC
     public suspend fun connect(request: Request): EstablishedClientConnection<TcpStream, Request> {
         val created = connectorFactory.makeConnector()
         val connector = created.connector
@@ -86,7 +65,9 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
                     dns = dns,
                     connector = connector,
                 )
-            stream.extensions().insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
+            stream.extensionsMut().insert(
+                ClientSocketInfo.new(SocketInfo.new(localAddr = stream.localAddr(), peerAddr = addr)),
+            )
             return EstablishedClientConnection(input = request, conn = stream)
         }
 
@@ -99,24 +80,37 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
                     dns = dns,
                     connector = connector,
                 )
-            stream.extensions().insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
+            stream.extensionsMut().insert(
+                ClientSocketInfo.new(SocketInfo.new(localAddr = stream.localAddr(), peerAddr = addr)),
+            )
             return EstablishedClientConnection(input = request, conn = stream)
         }
 
+        val transportCtx = request.toTransportContext()
+        if (transportCtx.protocol == TransportProtocol.Udp) {
+            throw IllegalStateException("Tcp Connector Service cannot establish a UDP transport")
+        }
+
+        val authority =
+            transportCtx.hostWithPort()
+                ?: request.authority
         val (stream, addr) =
             tcpConnect(
                 extensions = request.extensions(),
-                address = request.authority,
+                address = authority,
                 dns = dns,
                 connector = connector,
             )
-        stream.extensions().insert(ClientSocketInfo(local = stream.localAddr(), peer = addr))
+        stream.extensionsMut().insert(
+            ClientSocketInfo.new(SocketInfo.new(localAddr = stream.localAddr(), peerAddr = addr)),
+        )
         return EstablishedClientConnection(input = request, conn = stream)
     }
 
     /**
      * Serve a client connection request.
      */
+    @HiddenFromObjC
     public suspend fun serve(input: Request): EstablishedClientConnection<TcpStream, Request> =
         connect(input)
 

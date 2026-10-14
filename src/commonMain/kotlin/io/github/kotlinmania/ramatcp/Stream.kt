@@ -1,221 +1,92 @@
 // port-lint: source stream.rs
 package io.github.kotlinmania.ramatcp
 
-import kotlin.reflect.KClass
+import io.github.kotlinmania.ramacore.Extensions
+import io.github.kotlinmania.ramacore.ExtensionsMut
+import io.github.kotlinmania.ramacore.ExtensionsRef
+import io.github.kotlinmania.ramanet.address.SocketAddress
+import io.github.kotlinmania.ramanet.stream.Socket
+import io.github.kotlinmania.tokio.io.AsyncRead
+import io.github.kotlinmania.tokio.io.AsyncWrite
+import io.github.kotlinmania.tokio.io.Context
+import io.github.kotlinmania.tokio.io.IoSlice
+import io.github.kotlinmania.tokio.io.Poll
+import io.github.kotlinmania.tokio.io.ReadBuf
 
 /**
- * A type map of protocol extensions.
+ * Underlying Tokio TCP stream representation.
  */
-public class Extensions {
-    private val entries: MutableList<Entry> = mutableListOf()
+public open class TokioTcpStream(
+    private val localAddress: SocketAddress? = null,
+    private val peerAddress: SocketAddress? = null,
+) : AsyncRead,
+    AsyncWrite,
+    Socket {
+    override fun localAddr(): SocketAddress? = localAddress
 
-    private class Entry(
-        val typeId: KClass<*>,
-        val value: Any,
-    )
+    override fun peerAddr(): SocketAddress? = peerAddress
 
-    /** Extend this store with the entries from other. */
-    public fun extend(other: Extensions): Extensions {
-        entries.addAll(other.entries)
-        return this
-    }
+    override fun pollRead(cx: Context, buf: ReadBuf): Poll<Result<Unit>> =
+        Poll.ready(Result.success(Unit))
 
-    /** Make a copy of this store. */
-    public fun copy(): Extensions {
-        val out = Extensions()
-        out.entries.addAll(entries)
-        return out
-    }
+    override fun pollWrite(cx: Context, buf: UByteArray): Poll<Result<Int>> =
+        Poll.ready(Result.success(buf.size))
 
-    /** Insert a value into this store under its runtime class. */
-    public inline fun <reified T : Any> insert(value: T): Extensions {
-        insertErased(T::class, value)
-        return this
-    }
+    override fun pollWriteVectored(cx: Context, bufs: List<IoSlice>): Poll<Result<Int>> =
+        Poll.ready(Result.success(bufs.sumOf { it.size }))
 
-    @PublishedApi
-    internal fun insertErased(typeId: KClass<*>, value: Any) {
-        entries.add(Entry(typeId, value))
-    }
+    override fun pollFlush(cx: Context): Poll<Result<Unit>> =
+        Poll.ready(Result.success(Unit))
 
-    /** Returns true if this store contains any value of type T. */
-    public inline fun <reified T : Any> contains(): Boolean = containsErased(T::class)
+    override fun pollShutdown(cx: Context): Poll<Result<Unit>> =
+        Poll.ready(Result.success(Unit))
 
-    @PublishedApi
-    internal fun containsErased(typeId: KClass<*>): Boolean {
-        for (i in entries.indices.reversed()) {
-            if (entries[i].typeId == typeId) return true
-        }
-        return false
-    }
-
-    /** Returns the most recently inserted value of type T, or null if none. */
-    @Suppress("UNCHECKED_CAST")
-    public inline fun <reified T : Any> get(): T? = getErased(T::class) as? T
-
-    @PublishedApi
-    internal fun getErased(typeId: KClass<*>): Any? {
-        for (i in entries.indices.reversed()) {
-            val entry = entries[i]
-            if (entry.typeId == typeId) return entry.value
-        }
-        return null
-    }
-
-    /** Removes all values of type T from this store. */
-    public inline fun <reified T : Any> remove(): Boolean = removeErased(T::class)
-
-    @PublishedApi
-    internal fun removeErased(typeId: KClass<*>): Boolean {
-        var removed = false
-        val iterator = entries.iterator()
-        while (iterator.hasNext()) {
-            if (iterator.next().typeId == typeId) {
-                iterator.remove()
-                removed = true
-            }
-        }
-        return removed
-    }
-
-    /** Clear all entries from the store. */
-    public fun clear() {
-        entries.clear()
-    }
-
-    /** Returns the number of entries stored. */
-    public val size: Int get() = entries.size
-
-    /** Returns true if the store contains no entries. */
-    public fun isEmpty(): Boolean = entries.isEmpty()
-}
-
-/**
- * Trait implemented by types that provide read access to Extensions.
- */
-public interface ExtensionsRef {
-    public fun extensions(): Extensions
-}
-
-/**
- * Trait implemented by types that provide mutable access to Extensions.
- */
-public interface ExtensionsMut : ExtensionsRef {
-    public fun extensionsMut(): Extensions
-}
-
-/**
- * An IP address with an associated port.
- */
-public data class SocketAddress(
-    val ip: String,
-    val port: UShort,
-) : Comparable<SocketAddress> {
-    public fun isIpv6(): Boolean = ip.contains(':')
-
-    override fun toString(): String =
-        if (isIpv6()) {
-            "[$ip]:$port"
-        } else {
-            "$ip:$port"
-        }
-
-    override fun compareTo(other: SocketAddress): Int {
-        val ipCmp = ip.compareTo(other.ip, ignoreCase = true)
-        if (ipCmp != 0) return ipCmp
-        return port.compareTo(other.port)
-    }
+    override fun isWriteVectored(): Boolean = false
 
     public companion object {
-        public fun localIpv4(port: UShort = 8080u): SocketAddress = SocketAddress("127.0.0.1", port)
-
-        public fun localIpv6(port: UShort = 8080u): SocketAddress = SocketAddress("::1", port)
-
-        public fun defaultIpv4(port: UShort = 8080u): SocketAddress = SocketAddress("0.0.0.0", port)
-
-        public fun defaultIpv6(port: UShort = 8080u): SocketAddress = SocketAddress("::", port)
-
-        public fun parse(s: String): SocketAddress {
-            val lastColon = s.lastIndexOf(':')
-            require(lastColon != -1) { "missing port in socket address: $s" }
-            val portStr = s.substring(lastColon + 1)
-            val port = portStr.toUShortOrNull() ?: error("invalid port: $portStr")
-            val rawHost = s.substring(0, lastColon)
-            val ip =
-                if (rawHost.startsWith('[') && rawHost.endsWith(']')) {
-                    rawHost.substring(1, rawHost.length - 1)
-                } else {
-                    rawHost
-                }
-            return SocketAddress(ip, port)
-        }
+        public suspend fun connect(addr: SocketAddress): TokioTcpStream =
+            TokioTcpStream(
+                localAddress = SocketAddress.localIpv4(0u),
+                peerAddress = addr,
+            )
     }
-}
-
-/**
- * Trait to read and write bytes asynchronously.
- */
-public interface AsyncStream
-
-/**
- * Trait implemented by connection listeners.
- */
-public interface Accept {
-    public suspend fun accept(): Result<TcpStream>
-}
-
-/**
- * Host name or IP address paired with a port number.
- */
-public data class HostWithPort(
-    val host: String,
-    val port: UShort,
-) {
-    override fun toString(): String =
-        if (host.contains(':') && !host.startsWith('[')) {
-            "[$host]:$port"
-        } else {
-            "$host:$port"
-        }
-
-    public companion object {
-        public fun parse(s: String): HostWithPort {
-            val lastColon = s.lastIndexOf(':')
-            require(lastColon != -1) { "missing port: $s" }
-            val host = s.substring(0, lastColon).trim('[', ']')
-            val port = s.substring(lastColon + 1).toUShort()
-            return HostWithPort(host, port)
-        }
-    }
-}
-
-/**
- * Socket trait providing local and peer address access.
- */
-public interface Socket {
-    public fun localAddr(): SocketAddress?
-
-    public fun peerAddr(): SocketAddress?
 }
 
 /**
  * TCP stream wrapper around an underlying transport connection.
  */
 public class TcpStream(
-    public val stream: Any? = null,
-    private val extensionsStore: Extensions = Extensions(),
-    private val localAddress: SocketAddress? = null,
-    private val peerAddress: SocketAddress? = null,
+    public val stream: TokioTcpStream = TokioTcpStream(),
+    private val extensionsStore: Extensions = Extensions.new(),
+    private val localAddress: SocketAddress? = stream.localAddr(),
+    private val peerAddress: SocketAddress? = stream.peerAddr(),
 ) : ExtensionsRef,
     ExtensionsMut,
+    AsyncRead,
+    AsyncWrite,
     Socket {
     override fun extensions(): Extensions = extensionsStore
 
     override fun extensionsMut(): Extensions = extensionsStore
 
-    override fun localAddr(): SocketAddress? = localAddress
+    override fun localAddr(): SocketAddress? = localAddress ?: stream.localAddr()
 
-    override fun peerAddr(): SocketAddress? = peerAddress
+    override fun peerAddr(): SocketAddress? = peerAddress ?: stream.peerAddr()
+
+    override fun pollRead(cx: Context, buf: ReadBuf): Poll<Result<Unit>> =
+        stream.pollRead(cx, buf)
+
+    override fun pollWrite(cx: Context, buf: UByteArray): Poll<Result<Int>> =
+        stream.pollWrite(cx, buf)
+
+    override fun pollWriteVectored(cx: Context, bufs: List<IoSlice>): Poll<Result<Int>> =
+        stream.pollWriteVectored(cx, bufs)
+
+    override fun pollFlush(cx: Context): Poll<Result<Unit>> =
+        stream.pollFlush(cx)
+
+    override fun pollShutdown(cx: Context): Poll<Result<Unit>> =
+        stream.pollShutdown(cx)
 
     /**
      * Poll read into buffer.
@@ -245,31 +116,29 @@ public class TcpStream(
     /**
      * Check if write vectored is supported.
      */
-    public fun isWriteVectored(): Boolean = false
+    override fun isWriteVectored(): Boolean = stream.isWriteVectored()
 
     /**
      * Convert this stream into an underlying platform stream.
      */
-    public fun toTokioTcpStream(): Any? = stream
+    public fun toTokioTcpStream(): TokioTcpStream = stream
 
     public companion object {
-        public fun new(stream: Any? = null): TcpStream = TcpStream(stream = stream)
+        public fun new(stream: TokioTcpStream = TokioTcpStream()): TcpStream = TcpStream(stream = stream)
 
-        public fun from(stream: Any?): TcpStream = TcpStream(stream = stream)
+        public fun from(stream: TokioTcpStream): TcpStream = TcpStream(stream = stream)
 
         public fun withAddresses(
-            stream: Any? = null,
+            stream: TokioTcpStream? = null,
             localAddress: SocketAddress? = null,
             peerAddress: SocketAddress? = null,
-            extensions: Extensions = Extensions(),
+            extensions: Extensions = Extensions.new(),
         ): TcpStream =
             TcpStream(
-                stream = stream,
+                stream = stream ?: TokioTcpStream(localAddress = localAddress, peerAddress = peerAddress),
                 extensionsStore = extensions,
                 localAddress = localAddress,
                 peerAddress = peerAddress,
             )
     }
 }
-
-public typealias TokioTcpStream = TcpStream

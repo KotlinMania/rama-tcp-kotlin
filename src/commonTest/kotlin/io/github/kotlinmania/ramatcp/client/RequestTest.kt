@@ -1,8 +1,12 @@
 // port-lint: tests client/request.rs
 package io.github.kotlinmania.ramatcp.client
 
-import io.github.kotlinmania.ramatcp.Extensions
-import io.github.kotlinmania.ramatcp.HostWithPort
+import io.github.kotlinmania.http.Version
+import io.github.kotlinmania.ramacore.Extensions
+import io.github.kotlinmania.ramanet.NetProtocol
+import io.github.kotlinmania.ramanet.address.HostWithOptPort
+import io.github.kotlinmania.ramanet.address.HostWithPort
+import io.github.kotlinmania.ramanet.transport.TransportProtocol
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -11,20 +15,20 @@ import kotlin.test.assertTrue
 class RequestTest {
     @Test
     fun testRequestCreationAndMutation() {
-        val authority = HostWithPort("example.com", 443u)
+        val authority = HostWithPort.exampleDomainHttps()
         val req = Request.new(authority)
 
         assertEquals(authority, req.authority)
         assertNull(req.protocol)
         assertNull(req.httpVersion)
 
-        req.protocol(AppProtocol.Https)
-        assertEquals(AppProtocol.Https, req.protocol)
+        req.protocol(NetProtocol.HTTPS)
+        assertEquals(NetProtocol.HTTPS, req.protocol)
 
-        req.httpVersion(HttpVersion.H2)
-        assertEquals(HttpVersion.H2, req.httpVersion)
+        req.httpVersion(Version.HTTP_2)
+        assertEquals(Version.HTTP_2, req.httpVersion)
 
-        val ext = Extensions()
+        val ext = Extensions.new()
         ext.insert("custom-token")
         val reqWithExt = Request.newWithExtensions(authority, ext)
         assertEquals("custom-token", reqWithExt.extensions().get<String>())
@@ -32,14 +36,14 @@ class RequestTest {
 
     @Test
     fun testTransportContextConversion() {
-        val authority = HostWithPort("example.com", 443u)
-        val req = Request.new(authority).protocol(AppProtocol.Https).httpVersion(HttpVersion.H2)
+        val authority = HostWithPort.exampleDomainHttps()
+        val req = Request.new(authority).protocol(NetProtocol.HTTPS).httpVersion(Version.HTTP_2)
 
         val ctx = req.toTransportContext()
         assertEquals(TransportProtocol.Tcp, ctx.protocol)
-        assertEquals(AppProtocol.Https, ctx.appProtocol)
-        assertEquals(HttpVersion.H2, ctx.httpVersion)
-        assertEquals(authority, ctx.authority)
+        assertEquals(NetProtocol.HTTPS, ctx.appProtocol)
+        assertEquals("HTTP/2.0", ctx.httpVersion)
+        assertEquals(HostWithOptPort(authority.host, authority.port), ctx.authority)
 
         val res = req.tryRefIntoTransportContext()
         assertTrue(res.isSuccess)
@@ -53,32 +57,32 @@ class RequestTest {
 
     @Test
     fun testSetAndWithMethods() {
-        val auth1 = HostWithPort("example.com", 80u)
-        val auth2 = HostWithPort("api.example.com", 443u)
+        val auth1 = HostWithPort.exampleDomainHttp()
+        val auth2 = HostWithPort.parse("api.example.com:443")
         val req = Request.new(auth1)
 
-        req.setProtocol(AppProtocol.Http)
-        assertEquals(AppProtocol.Http, req.protocol)
+        req.setProtocol(NetProtocol.HTTP)
+        assertEquals(NetProtocol.HTTP, req.protocol)
 
-        req.setHttpVersion(HttpVersion.Http11)
-        assertEquals(HttpVersion.Http11, req.httpVersion)
+        req.setHttpVersion(Version.HTTP_11)
+        assertEquals(Version.HTTP_11, req.httpVersion)
 
         req.setAuthority(auth2)
         assertEquals(auth2, req.authority)
 
-        val withProt = req.withProtocol(AppProtocol.Https)
-        assertEquals(AppProtocol.Https, withProt.protocol)
-        assertEquals(AppProtocol.Http, req.protocol)
+        val withProt = req.withProtocol(NetProtocol.HTTPS)
+        assertEquals(NetProtocol.HTTPS, withProt.protocol)
+        assertEquals(NetProtocol.HTTP, req.protocol)
 
-        val withVer = req.withHttpVersion(HttpVersion.H2)
-        assertEquals(HttpVersion.H2, withVer.httpVersion)
-        assertEquals(HttpVersion.Http11, req.httpVersion)
+        val withVer = req.withHttpVersion(Version.HTTP_2)
+        assertEquals(Version.HTTP_2, withVer.httpVersion)
+        assertEquals(Version.HTTP_11, req.httpVersion)
 
         val withAuth = req.withAuthority(auth1)
         assertEquals(auth1, withAuth.authority)
         assertEquals(auth2, req.authority)
 
-        val ext = Extensions()
+        val ext = Extensions.new()
         ext.insert(42)
         val withExt = req.withExtensions(ext)
         assertEquals(42, withExt.extensions().get<Int>())

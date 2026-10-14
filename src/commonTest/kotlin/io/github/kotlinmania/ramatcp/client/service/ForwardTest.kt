@@ -1,7 +1,8 @@
 // port-lint: tests client/service/forward.rs
 package io.github.kotlinmania.ramatcp.client.service
 
-import io.github.kotlinmania.ramatcp.HostWithPort
+import io.github.kotlinmania.ramanet.address.HostWithPort
+import io.github.kotlinmania.ramanet.proxy.ProxyTarget
 import io.github.kotlinmania.ramatcp.TcpStream
 import io.github.kotlinmania.ramatcp.runSync
 import kotlin.test.Test
@@ -11,7 +12,7 @@ import kotlin.test.assertTrue
 class ForwardTest {
     @Test
     fun testStaticAndDynamicForwarder() {
-        val target = HostWithPort("example.com", 80u)
+        val target = HostWithPort.exampleDomainHttp()
         val staticFwd = Forwarder.new(target)
         val staticKind = staticFwd.kind
         assertTrue(staticKind is ForwarderKind.Static)
@@ -26,7 +27,7 @@ class ForwardTest {
 
     @Test
     fun testForwarderServe() {
-        val target = HostWithPort("127.0.0.1", 8080u)
+        val target = HostWithPort.localIpv4(8080u)
         val fwd = Forwarder.new(target)
         val stream = TcpStream.new()
         runSync {

@@ -1,12 +1,11 @@
 // port-lint: source pool/mod.rs
 package io.github.kotlinmania.ramatcp.pool
 
-import io.github.kotlinmania.ramatcp.SocketAddress
+import io.github.kotlinmania.ramanet.address.SocketAddress
 import io.github.kotlinmania.ramatcp.TcpStream
 import io.github.kotlinmania.ramatcp.client.TcpStreamConnector
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.random.Random
 
 /**
  * Pool error type.

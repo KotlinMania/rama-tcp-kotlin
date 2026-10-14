@@ -1,7 +1,7 @@
 // port-lint: tests client/service/select.rs
 package io.github.kotlinmania.ramatcp.client.service
 
-import io.github.kotlinmania.ramatcp.SocketAddress
+import io.github.kotlinmania.ramanet.address.SocketAddress
 import io.github.kotlinmania.ramatcp.TcpStream
 import io.github.kotlinmania.ramatcp.client.FunctionTcpStreamConnector
 import io.github.kotlinmania.ramatcp.runSync
