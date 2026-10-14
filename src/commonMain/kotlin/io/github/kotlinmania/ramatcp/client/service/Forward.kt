@@ -1,7 +1,6 @@
 // port-lint: source client/service/forward.rs
 package io.github.kotlinmania.ramatcp.client.service
 
-import io.github.kotlinmania.ramacore.error.OpaqueError
 import io.github.kotlinmania.ramanet.address.HostWithPort
 import io.github.kotlinmania.ramanet.proxy.ProxyRequest
 import io.github.kotlinmania.ramanet.proxy.ProxyTarget
@@ -46,10 +45,10 @@ public class Forwarder<C>(
                 is ForwarderKind.Static -> kind.target
                 is ForwarderKind.Dynamic ->
                     source.extensions().get<ProxyTarget>()?.target
-                        ?: throw OpaqueError.fromDisplay("missing forward authority")
+                        ?: throw IllegalStateException("missing forward authority")
             }
 
-        val extensions = source.extensions().clone()
+        val extensions = source.extensions().copy()
         val req = Request.newWithExtensions(authority, extensions)
         if (connector is TcpConnector<*, *>) {
             val established = connector.connect(req)

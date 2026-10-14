@@ -2,7 +2,6 @@
 package io.github.kotlinmania.ramatcp.client
 
 import io.github.kotlinmania.ramacore.Extensions
-import io.github.kotlinmania.ramacore.error.OpaqueError
 import io.github.kotlinmania.ramanet.address.Domain
 import io.github.kotlinmania.ramanet.address.Host
 import io.github.kotlinmania.ramanet.address.HostWithPort
@@ -122,7 +121,15 @@ public suspend fun tcpConnectWithSocketOpts(
     opts: SocketOptions?,
     addr: SocketAddress,
 ): TcpStream {
-    val localAddr = opts?.address ?: SocketAddress.localIpv4(0u)
+    val socket = opts?.tryBuildSocket()?.getOrNull()
+    val localSockAddr = socket?.localAddr()?.getOrNull()?.asSocket()
+    val localAddr =
+        opts?.address
+            ?: if (localSockAddr != null) {
+                SocketAddress.fromStd(localSockAddr)
+            } else {
+                SocketAddress("127.0.0.1", 0u)
+            }
     return TcpStream.withAddresses(
         localAddress = localAddr,
         peerAddress = addr,
@@ -159,10 +166,10 @@ public suspend fun tcpConnect(
         is Host.Address -> {
             val isV6 = host.isIpv6()
             if (!isV6 && ipMode == ConnectIpMode.Ipv6) {
-                throw OpaqueError.fromDisplay("IPv4 address is not allowed")
+                throw IllegalStateException("IPv4 address is not allowed")
             }
             if (isV6 && ipMode == ConnectIpMode.Ipv4) {
-                throw OpaqueError.fromDisplay("IPv6 address is not allowed")
+                throw IllegalStateException("IPv6 address is not allowed")
             }
             val socketAddr = SocketAddress(host.ip, address.port)
             val stream = connector.connect(socketAddr)
@@ -202,10 +209,15 @@ public suspend fun tcpConnectInner(
         resolvedIps.firstOrNull { ip ->
             val isV6 = ip.contains(':')
             val dnsAllowed = if (isV6) dnsMode.ipv6Supported() else dnsMode.ipv4Supported()
-            val connAllowed = if (isV6) ipMode.ipv6Supported() else ipMode.ipv4Supported()
+            val connAllowed =
+                when (ipMode) {
+                    ConnectIpMode.Dual -> true
+                    ConnectIpMode.Ipv4 -> !isV6
+                    ConnectIpMode.Ipv6 -> isV6
+                }
             dnsAllowed && connAllowed
         } ?: resolvedIps.firstOrNull()
-            ?: throw OpaqueError.fromDisplay("failed to connect to any resolved IP address for $domain (port $port)")
+            ?: throw IllegalStateException("failed to connect to any resolved IP address for $domain (port $port)")
 
     val socketAddr = SocketAddress(candidate, port)
     val stream = connector.connect(socketAddr)

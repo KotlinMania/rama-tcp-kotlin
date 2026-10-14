@@ -3,7 +3,6 @@
 
 package io.github.kotlinmania.ramatcp.client.service
 
-import io.github.kotlinmania.ramacore.error.OpaqueError
 import io.github.kotlinmania.ramanet.address.ProxyAddress
 import io.github.kotlinmania.ramanet.client.ConnectorTarget
 import io.github.kotlinmania.ramanet.client.EstablishedClientConnection
@@ -89,7 +88,7 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
 
         val transportCtx = request.toTransportContext()
         if (transportCtx.protocol == TransportProtocol.Udp) {
-            throw OpaqueError.fromDisplay("Tcp Connector Service cannot establish a UDP transport")
+            throw IllegalStateException("Tcp Connector Service cannot establish a UDP transport")
         }
 
         val authority =
@@ -139,7 +138,6 @@ public class TcpConnector<Dns : DnsResolver, Factory : TcpStreamConnectorFactory
 /**
  * Connector output type alias.
  */
-@HiddenFromObjC
 public typealias ConnectorOutput = EstablishedClientConnection<TcpStream, Request>
 
 /**

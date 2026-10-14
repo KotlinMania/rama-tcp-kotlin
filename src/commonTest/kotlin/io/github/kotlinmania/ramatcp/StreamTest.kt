@@ -14,7 +14,7 @@ class StreamTest {
     @Test
     fun testExtensionsCrud() {
         val ext = Extensions.new()
-        assertTrue(ext.isEmpty())
+        assertFalse(ext.contains<String>())
 
         ext.insert("hello")
         ext.insert(42)
@@ -27,11 +27,8 @@ class StreamTest {
         assertEquals(42, ext.get<Int>())
         assertNull(ext.get<Double>())
 
-        val copied = ext.clone()
+        val copied = ext.copy()
         assertTrue(copied.contains<String>())
-
-        ext.clear()
-        assertTrue(ext.isEmpty())
     }
 
     @Test

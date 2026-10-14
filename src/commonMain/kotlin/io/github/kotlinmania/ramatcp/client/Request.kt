@@ -3,6 +3,7 @@
 
 package io.github.kotlinmania.ramatcp.client
 
+import io.github.kotlinmania.http.Version
 import io.github.kotlinmania.ramacore.Extensions
 import io.github.kotlinmania.ramacore.ExtensionsMut
 import io.github.kotlinmania.ramacore.ExtensionsRef
@@ -16,23 +17,9 @@ import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.native.HiddenFromObjC
 
 /**
- * HTTP version identifier hint.
+ * HTTP version type alias matching upstream `rama_http_types::Version` (`http::Version`).
  */
-public enum class HttpVersion(
-    public val wireName: String,
-) {
-    Http09("HTTP/0.9"),
-    Http10("HTTP/1.0"),
-    Http11("HTTP/1.1"),
-    H2("HTTP/2.0"),
-    H3("HTTP/3.0"),
-    ;
-
-    public companion object {
-        public fun fromWireName(name: String?): HttpVersion? =
-            entries.firstOrNull { it.wireName == name || it.name.equals(name, ignoreCase = true) }
-    }
-}
+public typealias HttpVersion = Version
 
 /**
  * A request to establish a TCP Connection.
@@ -42,7 +29,7 @@ public enum class HttpVersion(
 public data class Request(
     public var authority: HostWithPort,
     public var protocol: NetProtocol? = null,
-    public var httpVersion: HttpVersion? = null,
+    public var httpVersion: Version? = null,
     private var extensionsStore: Extensions = Extensions.new(),
 ) : ExtensionsRef,
     ExtensionsMut {
@@ -70,7 +57,7 @@ public data class Request(
      * Return a copy of this request with the specified application protocol.
      */
     public fun withProtocol(protocol: NetProtocol?): Request {
-        val copy = this.copy(extensionsStore = extensionsStore.clone())
+        val copy = this.copy(extensionsStore = extensionsStore.copy())
         copy.protocol = protocol
         return copy
     }
@@ -78,7 +65,7 @@ public data class Request(
     /**
      * Define the HTTP version as a hint to the application layer.
      */
-    public fun httpVersion(version: HttpVersion?): Request {
+    public fun httpVersion(version: Version?): Request {
         this.httpVersion = version
         return this
     }
@@ -86,7 +73,7 @@ public data class Request(
     /**
      * Set the HTTP version as a hint to the application layer.
      */
-    public fun setHttpVersion(version: HttpVersion?): Request {
+    public fun setHttpVersion(version: Version?): Request {
         this.httpVersion = version
         return this
     }
@@ -94,8 +81,8 @@ public data class Request(
     /**
      * Return a copy of this request with the specified HTTP version.
      */
-    public fun withHttpVersion(version: HttpVersion?): Request {
-        val copy = this.copy(extensionsStore = extensionsStore.clone())
+    public fun withHttpVersion(version: Version?): Request {
+        val copy = this.copy(extensionsStore = extensionsStore.copy())
         copy.httpVersion = version
         return copy
     }
@@ -112,7 +99,7 @@ public data class Request(
      * Return a copy of this request with the specified authority.
      */
     public fun withAuthority(authority: HostWithPort): Request {
-        val copy = this.copy(extensionsStore = extensionsStore.clone())
+        val copy = this.copy(extensionsStore = extensionsStore.copy())
         copy.authority = authority
         return copy
     }
@@ -121,7 +108,7 @@ public data class Request(
      * Return a copy of this request with the specified extensions.
      */
     public fun withExtensions(extensions: Extensions): Request =
-        this.copy(extensionsStore = extensions.clone())
+        this.copy(extensionsStore = extensions.copy())
 
     /**
      * Convert this request into a [TransportContext].
@@ -131,7 +118,7 @@ public data class Request(
             protocol = TransportProtocol.Tcp,
             authority = HostWithOptPort(authority.host, authority.port),
             appProtocol = protocol,
-            httpVersion = httpVersion?.wireName,
+            httpVersion = httpVersion?.fmt(),
         )
 
     /**
@@ -178,9 +165,19 @@ public data class Request(
             return Request(
                 authority = hostWithPort,
                 protocol = context.appProtocol,
-                httpVersion = HttpVersion.fromWireName(context.httpVersion),
+                httpVersion = parseHttpVersion(context.httpVersion),
             )
         }
+
+        private fun parseHttpVersion(wireName: String?): Version? =
+            when (wireName) {
+                "HTTP/0.9" -> Version.HTTP_09
+                "HTTP/1.0" -> Version.HTTP_10
+                "HTTP/1.1" -> Version.HTTP_11
+                "HTTP/2.0", "H2" -> Version.HTTP_2
+                "HTTP/3.0", "H3" -> Version.HTTP_3
+                else -> null
+            }
 
         /**
          * Error type for infallible request conversions.

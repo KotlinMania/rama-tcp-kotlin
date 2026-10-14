@@ -8,10 +8,10 @@ struct RamaTcpExportTests {
         let version = RamaTcp.shared.VERSION
         #expect(!version.isEmpty)
 
-        let stream = TcpStream.companion.new(stream: TokioTcpStream(localAddress: nil, peerAddress: nil))
+        let stream = TcpStream.Companion.shared.new(stream: TokioTcpStream(localAddress: nil, peerAddress: nil))
         #expect(!stream.isWriteVectored())
 
-        let builder = TcpListener.companion.build().ttl(ttl: 64)
+        let builder = ExportedKotlinPackages.io.github.kotlinmania.ramatcp.server.TcpListener.Companion.shared.build().ttl(ttl: 64)
         #expect(builder.ttl == 64)
     }
 }

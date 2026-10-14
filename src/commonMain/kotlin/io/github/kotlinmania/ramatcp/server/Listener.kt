@@ -10,8 +10,10 @@ import io.github.kotlinmania.ramanet.address.SocketAddress
 import io.github.kotlinmania.ramanet.conn.isConnectionError
 import io.github.kotlinmania.ramanet.socket.DeviceName
 import io.github.kotlinmania.ramanet.socket.Interface
+import io.github.kotlinmania.ramanet.socket.SocketOptions
 import io.github.kotlinmania.ramanet.stream.SocketInfo
 import io.github.kotlinmania.ramatcp.TcpStream
+import io.github.kotlinmania.socket2.Socket as CoreSocket
 import kotlinx.coroutines.delay
 import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.native.HiddenFromObjC
@@ -65,13 +67,39 @@ public class TcpListenerBuilder(
         when (iface) {
             is Interface.Address -> bindAddress(iface.socketAddress)
             is Interface.Device -> bindDevice(iface.deviceName)
+            is Interface.Socket -> {
+                val socket = iface.socketOptions.tryBuildSocket().getOrNull()
+                if (socket != null) {
+                    socket.listen(4096)
+                    bindSocket(socket)
+                } else {
+                    val addr = iface.socketOptions.address ?: SocketAddress.localIpv4(0u)
+                    TcpListener(localAddress = addr, timeToLive = ttl, inner = iface.socketOptions)
+                }
+            }
+        }
+
+    /**
+     * Creates a new [TcpListener], which will be bound to the specified [CoreSocket].
+     */
+    public suspend fun bindSocket(socket: CoreSocket): TcpListener =
+        TcpListener.bindSocketInternal(socket).let { listener ->
+            TcpListener(
+                localAddress = listener.localAddress,
+                timeToLive = ttl,
+                inner = socket,
+            )
         }
 
     /**
      * Creates a new [TcpListener], which will be bound to the specified socket.
      */
     public suspend fun bindSocket(socket: Any?): TcpListener =
-        TcpListener(localAddress = SocketAddress.localIpv4(0u), timeToLive = ttl, inner = socket)
+        if (socket is CoreSocket) {
+            bindSocket(socket)
+        } else {
+            TcpListener(localAddress = SocketAddress.localIpv4(0u), timeToLive = ttl, inner = socket)
+        }
 
     /**
      * Creates a new [TcpListener], which will be bound to the specified device name.
@@ -82,8 +110,15 @@ public class TcpListenerBuilder(
     /**
      * Creates a new [TcpListener], which will be bound to the specified [DeviceName].
      */
-    public suspend fun bindDevice(deviceName: DeviceName): TcpListener =
-        TcpListener(localAddress = SocketAddress.localIpv4(0u), timeToLive = ttl, inner = deviceName)
+    public suspend fun bindDevice(deviceName: DeviceName): TcpListener {
+        val opts = SocketOptions.defaultTcp().copy(device = deviceName)
+        val built = opts.tryBuildSocket().getOrNull()
+        if (built != null) {
+            built.listen(4096)
+            return bindSocket(built)
+        }
+        return TcpListener(localAddress = SocketAddress.localIpv4(0u), timeToLive = ttl, inner = deviceName)
+    }
 
     public companion object {
         /** Create a new [TcpListenerBuilder]. */
@@ -201,7 +236,7 @@ public class TcpListener(
     /**
      * Return raw file descriptor on Unix platforms.
      */
-    public fun asRawFd(): Int = 0
+    public fun asRawFd(): Int = (inner as? CoreSocket)?.asRaw() ?: 0
 
     /**
      * Return borrowed file descriptor on Unix platforms.
@@ -211,7 +246,7 @@ public class TcpListener(
     /**
      * Return raw socket handle on Windows platforms.
      */
-    public fun asRawSocket(): Long = 0L
+    public fun asRawSocket(): Long = (inner as? CoreSocket)?.asRaw()?.toLong() ?: 0L
 
     /**
      * Return borrowed socket handle on Windows platforms.
@@ -244,6 +279,12 @@ public class TcpListener(
             TcpListenerBuilder.new().bindAddress(addr)
 
         /**
+         * Creates a new [TcpListener] bound to the specified [CoreSocket].
+         */
+        public suspend fun bindSocket(socket: CoreSocket): TcpListener =
+            TcpListenerBuilder.new().bindSocket(socket)
+
+        /**
          * Creates a new [TcpListener] bound to the specified socket.
          */
         public suspend fun bindSocket(socket: Any?): TcpListener =
@@ -252,8 +293,20 @@ public class TcpListener(
         /**
          * Internal socket binding helper.
          */
+        public fun bindSocketInternal(socket: CoreSocket): TcpListener {
+            socket.setNonblocking(true)
+            return TcpListener(localAddress = SocketAddress.localIpv4(0u), inner = socket)
+        }
+
+        /**
+         * Internal socket binding helper.
+         */
         public fun bindSocketInternal(socket: Any?): TcpListener =
-            TcpListener(localAddress = SocketAddress.localIpv4(0u), inner = socket)
+            if (socket is CoreSocket) {
+                bindSocketInternal(socket)
+            } else {
+                TcpListener(localAddress = SocketAddress.localIpv4(0u), inner = socket)
+            }
 
         /**
          * Creates a new [TcpListener] bound to the specified device name.
