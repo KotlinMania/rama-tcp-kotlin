@@ -1,9 +1,9 @@
 // port-lint: tests client/connect.rs
 package io.github.kotlinmania.ramatcp.client
 
-import io.github.kotlinmania.ramatcp.Extensions
-import io.github.kotlinmania.ramatcp.HostWithPort
-import io.github.kotlinmania.ramatcp.SocketAddress
+import io.github.kotlinmania.ramacore.Extensions
+import io.github.kotlinmania.ramanet.address.HostWithPort
+import io.github.kotlinmania.ramanet.address.SocketAddress
 import io.github.kotlinmania.ramatcp.TcpStream
 import io.github.kotlinmania.ramatcp.runSync
 import kotlin.test.Test
@@ -13,8 +13,8 @@ import kotlin.test.assertNotNull
 class ConnectTest {
     @Test
     fun testDefaultTcpConnect() {
-        val ext = Extensions()
-        val address = HostWithPort("127.0.0.1", 8080u)
+        val ext = Extensions.new()
+        val address = HostWithPort.localIpv4(8080u)
         val (stream, socketAddr) = runSync { defaultTcpConnect(ext, address) }
 
         assertNotNull(stream)
@@ -24,8 +24,8 @@ class ConnectTest {
 
     @Test
     fun testTcpConnectWithCustomConnector() {
-        val ext = Extensions()
-        val address = HostWithPort("localhost", 9000u)
+        val ext = Extensions.new()
+        val address = HostWithPort.localhostDomainWithPort(9000u)
         val connector =
             FunctionTcpStreamConnector { addr ->
                 TcpStream.withAddresses(
@@ -51,7 +51,7 @@ class ConnectTest {
 
     @Test
     fun testSocketAddressConnectorAndDnsOverwrite() {
-        val ext = Extensions()
+        val ext = Extensions.new()
         ext.insert(DnsOverwrite(mapOf("my.service" to listOf("10.0.0.1"))))
 
         val bindAddr = SocketAddress.localIpv4(33333u)
@@ -60,7 +60,7 @@ class ConnectTest {
             runSync {
                 tcpConnect(
                     extensions = ext,
-                    address = HostWithPort("my.service", 80u),
+                    address = HostWithPort.parse("my.service:80"),
                     connector = connector,
                 )
             }

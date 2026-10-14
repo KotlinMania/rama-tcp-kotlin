@@ -1,8 +1,21 @@
 // port-lint: source server/listener.rs
+@file:OptIn(kotlin.experimental.ExperimentalObjCRefinement::class)
+
 package io.github.kotlinmania.ramatcp.server
 
-import io.github.kotlinmania.ramatcp.SocketAddress
+import io.github.kotlinmania.ramacore.graceful.ShutdownGuard
+import io.github.kotlinmania.ramacore.rt.Executor
+import io.github.kotlinmania.ramacore.service.Service
+import io.github.kotlinmania.ramanet.address.SocketAddress
+import io.github.kotlinmania.ramanet.conn.isConnectionError
+import io.github.kotlinmania.ramanet.socket.DeviceName
+import io.github.kotlinmania.ramanet.socket.Interface
+import io.github.kotlinmania.ramanet.stream.SocketInfo
 import io.github.kotlinmania.ramatcp.TcpStream
+import kotlinx.coroutines.delay
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.native.HiddenFromObjC
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Builder for [TcpListener].
@@ -19,28 +32,58 @@ public class TcpListenerBuilder(
     }
 
     /**
+     * Sets the value for the IP_TTL option on this socket.
+     */
+    public fun setTtl(ttl: UInt): TcpListenerBuilder {
+        this.ttl = ttl
+        return this
+    }
+
+    /**
+     * Returns a new builder with the specified IP_TTL option.
+     */
+    public fun withTtl(ttl: UInt): TcpListenerBuilder =
+        TcpListenerBuilder(ttl = ttl)
+
+    /**
      * Creates a new [TcpListener], which will be bound to the specified socket address.
      */
     public suspend fun bindAddress(addr: SocketAddress): TcpListener =
         TcpListener(localAddress = addr, timeToLive = ttl)
 
     /**
-     * Creates a new [TcpListener], which will be bound to the specified address string.
+     * Creates a new [TcpListener], which will be bound to the specified address or interface string.
      */
     public suspend fun bind(addrStr: String): TcpListener =
-        bindAddress(SocketAddress.parse(addrStr))
+        bind(Interface.parse(addrStr))
+
+    /**
+     * Creates a new [TcpListener], which will be bound to the specified [Interface].
+     */
+    @HiddenFromObjC
+    public suspend fun bind(iface: Interface): TcpListener =
+        when (iface) {
+            is Interface.Address -> bindAddress(iface.socketAddress)
+            is Interface.Device -> bindDevice(iface.deviceName)
+        }
 
     /**
      * Creates a new [TcpListener], which will be bound to the specified socket.
      */
     public suspend fun bindSocket(socket: Any?): TcpListener =
-        bindAddress(SocketAddress.localIpv4(0u))
+        TcpListener(localAddress = SocketAddress.localIpv4(0u), timeToLive = ttl, inner = socket)
 
     /**
      * Creates a new [TcpListener], which will be bound to the specified device name.
      */
     public suspend fun bindDevice(deviceName: String): TcpListener =
-        bindAddress(SocketAddress.localIpv4(0u))
+        bindDevice(DeviceName(deviceName))
+
+    /**
+     * Creates a new [TcpListener], which will be bound to the specified [DeviceName].
+     */
+    public suspend fun bindDevice(deviceName: DeviceName): TcpListener =
+        TcpListener(localAddress = SocketAddress.localIpv4(0u), timeToLive = ttl, inner = deviceName)
 
     public companion object {
         /** Create a new [TcpListenerBuilder]. */
@@ -97,7 +140,9 @@ public class TcpListener(
      */
     public suspend fun serve(handler: suspend (TcpStream) -> Unit) {
         try {
-            val (stream, _) = accept()
+            val (stream, peer) = accept()
+            stream.extensionsMut().insert(SocketInfo.new(localAddr = localAddress, peerAddr = peer))
+            stream.extensionsMut().insert(Executor.new())
             handler(stream)
         } catch (e: Throwable) {
             handleAcceptErr(e)
@@ -105,18 +150,51 @@ public class TcpListener(
     }
 
     /**
+     * Serve connections from this listener with the given [Service].
+     */
+    @HiddenFromObjC
+    public suspend fun <Output : Any, Error : Any> serve(service: Service<TcpStream, Output, Error>) {
+        serve { stream ->
+            service.serve(stream)
+        }
+    }
+
+    /**
      * Serve connections from this listener gracefully respecting a shutdown guard.
      */
-    public suspend fun serveGraceful(guard: Any?, handler: suspend (TcpStream) -> Unit) {
-        serve(handler)
+    public suspend fun serveGraceful(guard: ShutdownGuard, handler: suspend (TcpStream) -> Unit) {
+        if (guard.isCancelled) return
+        try {
+            val (stream, peer) = accept()
+            stream.extensionsMut().insert(SocketInfo.new(localAddr = localAddress, peerAddr = peer))
+            stream.extensionsMut().insert(Executor.graceful(guard))
+            guard.spawnTask {
+                handler(stream)
+            }
+        } catch (e: Throwable) {
+            handleAcceptErr(e)
+        }
+    }
+
+    /**
+     * Serve connections from this listener gracefully with the given [Service].
+     */
+    @HiddenFromObjC
+    public suspend fun <Output : Any, Error : Any> serveGraceful(
+        guard: ShutdownGuard,
+        service: Service<TcpStream, Output, Error>,
+    ) {
+        serveGraceful(guard) { stream ->
+            service.serve(stream)
+        }
     }
 
     /**
      * Handle accept error logging and backoff.
      */
     public suspend fun handleAcceptErr(err: Throwable) {
-        if (err.message?.isNotEmpty() == true) {
-            // log error
+        if (!isConnectionError(err)) {
+            delay(1.seconds)
         }
     }
 
@@ -153,6 +231,13 @@ public class TcpListener(
             TcpListenerBuilder.new().bind(addr)
 
         /**
+         * Creates a new [TcpListener] bound to the specified [Interface].
+         */
+        @HiddenFromObjC
+        public suspend fun bind(iface: Interface): TcpListener =
+            TcpListenerBuilder.new().bind(iface)
+
+        /**
          * Creates a new [TcpListener] bound to the specified socket address.
          */
         public suspend fun bindAddress(addr: SocketAddress): TcpListener =
@@ -177,6 +262,12 @@ public class TcpListener(
             TcpListenerBuilder.new().bindDevice(deviceName)
 
         /**
+         * Creates a new [TcpListener] bound to the specified [DeviceName].
+         */
+        public suspend fun bindDevice(deviceName: DeviceName): TcpListener =
+            TcpListenerBuilder.new().bindDevice(deviceName)
+
+        /**
          * Construct a [TcpListener] from an underlying platform socket.
          */
         public fun from(inner: Any?): TcpListener =
@@ -185,6 +276,7 @@ public class TcpListener(
         /**
          * Try to convert a platform socket into a [TcpListener].
          */
+        @HiddenFromObjC
         public fun tryFrom(inner: Any?): Result<TcpListener> =
             Result.success(from(inner))
     }

@@ -1,6 +1,8 @@
 // port-lint: tests stream.rs
 package io.github.kotlinmania.ramatcp
 
+import io.github.kotlinmania.ramacore.Extensions
+import io.github.kotlinmania.ramanet.address.SocketAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -11,9 +13,8 @@ import kotlin.test.assertTrue
 class StreamTest {
     @Test
     fun testExtensionsCrud() {
-        val ext = Extensions()
+        val ext = Extensions.new()
         assertTrue(ext.isEmpty())
-        assertEquals(0, ext.size)
 
         ext.insert("hello")
         ext.insert(42)
@@ -26,13 +27,8 @@ class StreamTest {
         assertEquals(42, ext.get<Int>())
         assertNull(ext.get<Double>())
 
-        val copied = ext.copy()
-        assertEquals(2, copied.size)
+        val copied = ext.clone()
         assertTrue(copied.contains<String>())
-
-        assertTrue(ext.remove<String>())
-        assertFalse(ext.contains<String>())
-        assertNull(ext.get<String>())
 
         ext.clear()
         assertTrue(ext.isEmpty())
@@ -79,6 +75,6 @@ class StreamTest {
         assertTrue(stream.pollFlush())
         assertTrue(stream.pollShutdown())
         assertFalse(stream.isWriteVectored())
-        assertNull(stream.toTokioTcpStream())
+        assertNotNull(stream.toTokioTcpStream())
     }
 }

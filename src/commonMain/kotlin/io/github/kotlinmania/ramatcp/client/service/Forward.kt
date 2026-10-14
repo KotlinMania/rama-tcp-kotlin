@@ -1,18 +1,15 @@
 // port-lint: source client/service/forward.rs
 package io.github.kotlinmania.ramatcp.client.service
 
-import io.github.kotlinmania.ramatcp.HostWithPort
+import io.github.kotlinmania.ramacore.error.OpaqueError
+import io.github.kotlinmania.ramanet.address.HostWithPort
+import io.github.kotlinmania.ramanet.proxy.ProxyRequest
+import io.github.kotlinmania.ramanet.proxy.ProxyTarget
+import io.github.kotlinmania.ramanet.proxy.StreamForwardService
 import io.github.kotlinmania.ramatcp.TcpStream
 import io.github.kotlinmania.ramatcp.client.DefaultDnsResolver
 import io.github.kotlinmania.ramatcp.client.DefaultTcpStreamConnector
 import io.github.kotlinmania.ramatcp.client.Request
-
-/**
- * Proxy target container for dynamic forwarding.
- */
-public data class ProxyTarget(
-    public val target: HostWithPort,
-)
 
 /**
  * Kind of target for TCP forwarding.
@@ -49,13 +46,15 @@ public class Forwarder<C>(
                 is ForwarderKind.Static -> kind.target
                 is ForwarderKind.Dynamic ->
                     source.extensions().get<ProxyTarget>()?.target
-                        ?: throw IllegalStateException("missing forward authority")
+                        ?: throw OpaqueError.fromDisplay("missing forward authority")
             }
 
-        val extensions = source.extensions().copy()
+        val extensions = source.extensions().clone()
         val req = Request.newWithExtensions(authority, extensions)
         if (connector is TcpConnector<*, *>) {
-            connector.connect(req)
+            val established = connector.connect(req)
+            val proxyReq = ProxyRequest<Any, Any>(source = source, target = established.conn)
+            StreamForwardService.default().serve(proxyReq)
         }
     }
 
