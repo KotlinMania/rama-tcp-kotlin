@@ -6,7 +6,7 @@ import io.github.kotlinmania.ramacore.Extensions
 import io.github.kotlinmania.ramanet.NetProtocol
 import io.github.kotlinmania.ramanet.address.HostWithOptPort
 import io.github.kotlinmania.ramanet.address.HostWithPort
-import io.github.kotlinmania.ramanet.transport.TransportProtocol
+import io.github.kotlinmania.ramanet.TransportProtocol
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

@@ -8,7 +8,7 @@ import io.github.kotlinmania.ramanet.client.ConnectorTarget
 import io.github.kotlinmania.ramanet.client.EstablishedClientConnection
 import io.github.kotlinmania.ramanet.stream.ClientSocketInfo
 import io.github.kotlinmania.ramanet.stream.SocketInfo
-import io.github.kotlinmania.ramanet.transport.TransportProtocol
+import io.github.kotlinmania.ramanet.TransportProtocol
 import io.github.kotlinmania.ramatcp.TcpStream
 import io.github.kotlinmania.ramatcp.client.DefaultDnsResolver
 import io.github.kotlinmania.ramatcp.client.DefaultTcpStreamConnector
