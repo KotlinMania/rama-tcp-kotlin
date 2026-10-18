@@ -17,8 +17,16 @@ public data class CreatedTcpStreamConnector<out Connector : TcpStreamConnector>(
  * stream service to create a stream within a specific context.
  *
  * In the most simplest case you use a [TcpStreamConnectorCloneFactory]
- * to use a cloneable connector, but in more advanced cases you can use variants
- * of [TcpStreamConnector] specific to the given contexts.
+ * to use a cloneable connector factory, but in more advanced cases you can use
+ * variants of [TcpStreamConnector] specific to the given contexts.
+ *
+ * Examples why you might want variants:
+ *
+ * - You might have specific needs for your sockets (such as binding to a specific interface)
+ *   that you do not have for all egress traffic. A socket library such as Socket2
+ *   can help with this.
+ * - It is possible that you have specific filter or firewall needs for some
+ *   egress traffic but not all of it.
  */
 public interface TcpStreamConnectorFactory<Connector : TcpStreamConnector> {
     /**
@@ -37,7 +45,10 @@ public class UnitTcpStreamConnectorFactory : TcpStreamConnectorFactory<DefaultTc
 
 /**
  * Utility implementation of a [TcpStreamConnectorFactory] which is implemented
- * to allow one to use a connector as a [TcpStreamConnectorFactory].
+ * to allow one to use a cloneable [TcpStreamConnector] as a [TcpStreamConnectorFactory]
+ * by cloning itself.
+ *
+ * This class can be used directly or via higher-level service constructors.
  */
 public class TcpStreamConnectorCloneFactory<Connector : TcpStreamConnector>(
     public val connector: Connector,
@@ -54,7 +65,7 @@ public class TcpStreamConnectorCloneFactory<Connector : TcpStreamConnector>(
 /**
  * Error type alias for connector factory operations.
  */
-public typealias SelectError = Exception
+public typealias SelectError = Throwable
 
 /**
  * Connector type alias for factory definitions.

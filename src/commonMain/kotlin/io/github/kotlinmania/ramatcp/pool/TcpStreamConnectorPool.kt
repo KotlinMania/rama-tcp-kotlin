@@ -1,4 +1,3 @@
-// port-lint: source pool/mod.rs
 package io.github.kotlinmania.ramatcp.pool
 
 import io.github.kotlinmania.ramanet.address.SocketAddress
@@ -88,8 +87,3 @@ public class TcpStreamConnectorPool<C : TcpStreamConnector>(
             )
     }
 }
-
-/**
- * Pool error type alias matching trait Error associated type.
- */
-public typealias Error = PoolError
