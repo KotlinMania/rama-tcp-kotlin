@@ -2,12 +2,12 @@
 package io.github.kotlinmania.ramatcp.client
 
 import io.github.kotlinmania.ramacore.Extensions
+import io.github.kotlinmania.ramanet.ConnectIpMode
+import io.github.kotlinmania.ramanet.DnsResolveIpMode
 import io.github.kotlinmania.ramanet.address.Domain
 import io.github.kotlinmania.ramanet.address.Host
 import io.github.kotlinmania.ramanet.address.HostWithPort
 import io.github.kotlinmania.ramanet.address.SocketAddress
-import io.github.kotlinmania.ramanet.mode.ConnectIpMode
-import io.github.kotlinmania.ramanet.mode.DnsResolveIpMode
 import io.github.kotlinmania.ramanet.socket.DeviceName
 import io.github.kotlinmania.ramanet.socket.SocketOptions
 import io.github.kotlinmania.ramatcp.TcpStream

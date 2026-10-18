@@ -1,4 +1,3 @@
-// port-lint: tests pool/mod.rs
 package io.github.kotlinmania.ramatcp.pool
 
 import io.github.kotlinmania.ramanet.address.SocketAddress
@@ -12,7 +11,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class ModTest {
+class TcpStreamConnectorPoolTest {
     private class MockConnector(
         val address: SocketAddress,
     ) : TcpStreamConnector {

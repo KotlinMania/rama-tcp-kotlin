@@ -8,18 +8,13 @@ import io.github.kotlinmania.ramacore.Extensions
 import io.github.kotlinmania.ramacore.ExtensionsMut
 import io.github.kotlinmania.ramacore.ExtensionsRef
 import io.github.kotlinmania.ramanet.NetProtocol
+import io.github.kotlinmania.ramanet.TransportContext
+import io.github.kotlinmania.ramanet.TransportProtocol
+import io.github.kotlinmania.ramanet.TryRefIntoTransportContext
 import io.github.kotlinmania.ramanet.address.HostWithOptPort
 import io.github.kotlinmania.ramanet.address.HostWithPort
-import io.github.kotlinmania.ramanet.transport.TransportContext
-import io.github.kotlinmania.ramanet.transport.TransportProtocol
-import io.github.kotlinmania.ramanet.transport.TryRefIntoTransportContext
 import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.native.HiddenFromObjC
-
-/**
- * HTTP version type alias matching upstream `rama_http_types::Version` (`http::Version`).
- */
-public typealias HttpVersion = Version
 
 /**
  * A request to establish a TCP Connection.
