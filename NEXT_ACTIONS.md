@@ -5,13 +5,13 @@ Based on AST analysis, here are the concrete next steps.
 ## Summary
 
 - **Files Present:** 12/12 (100.0%)
-- **Function parity:** 66/66 matched (target 134) — 100.0%
-- **Class/type parity:** 24/24 matched (target 85) — 100.0%
-- **Combined symbol parity:** 90/90 matched (target 219) — 100.0%
-- **Average inline-code cosine:** 0.43 (function body across 8 matched files)
-- **Average documentation cosine:** 0.60 (doc text across 8 matched files)
-- **Cheat-zeroed Files:** 5
-- **Critical Issues:** 10 files with <0.60 function similarity
+- **Function parity:** 66/66 matched (target 141) — 100.0%
+- **Class/type parity:** 24/24 matched (target 69) — 100.0%
+- **Combined symbol parity:** 90/90 matched (target 210) — 100.0%
+- **Average inline-code cosine:** 0.46 (function body across 8 matched files)
+- **Average documentation cosine:** 0.61 (doc text across 8 matched files)
+- **Cheat-zeroed Files:** 6
+- **Critical Issues:** 9 files with <0.60 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -29,22 +29,22 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 1. client.request
 
-- **Target:** `client.Request`
-- **Similarity:** 0.37
+- **Target:** `client.Request [ZERO]`
+- **Similarity:** 0.00
 - **Dependents:** 1
-- **Priority Score:** 1000806.3
-- **Functions:** 6/6 matched (target 20)
+- **Priority Score:** 1000810.0
+- **Functions:** 6/6 matched (target 22)
 - **Missing functions:** _none_
-- **Types:** 2/2 matched (target 8)
+- **Types:** 2/2 matched (target 5)
 - **Missing types:** _none_
 
 ### 2. server.listener
 
 - **Target:** `server.Listener`
-- **Similarity:** 0.46
+- **Similarity:** 0.53
 - **Dependents:** 0
-- **Priority Score:** 2505.4
-- **Functions:** 22/22 matched (target 30)
+- **Priority Score:** 2504.7
+- **Functions:** 22/22 matched (target 41)
 - **Missing functions:** _none_
 - **Types:** 3/3 matched (target 5)
 - **Missing types:** _none_
@@ -64,23 +64,23 @@ Every matched file is listed below with function and type symbol parity.
 ### 4. stream
 
 - **Target:** `ramatcp.Stream`
-- **Similarity:** 0.32
+- **Similarity:** 0.65
 - **Dependents:** 0
-- **Priority Score:** 1206.8
-- **Functions:** 12/12 matched (target 39)
+- **Priority Score:** 1203.5
+- **Functions:** 12/12 matched (target 31)
 - **Missing functions:** _none_
-- **Types:** 0/0 matched (target 12)
+- **Types:** 0/0 matched (target 3)
 - **Missing types:** _none_
 
 ### 5. client.connect
 
 - **Target:** `client.Connect`
-- **Similarity:** 0.43
+- **Similarity:** 0.58
 - **Dependents:** 0
-- **Priority Score:** 905.7
-- **Functions:** 6/6 matched (target 12)
+- **Priority Score:** 904.2
+- **Functions:** 6/6 matched (target 14)
 - **Missing functions:** _none_
-- **Types:** 3/3 matched (target 12)
+- **Types:** 3/3 matched (target 13)
 - **Missing types:** _none_
 
 ### 6. service.connector
@@ -91,18 +91,18 @@ Every matched file is listed below with function and type symbol parity.
 - **Priority Score:** 902.8
 - **Functions:** 6/6 matched (target 10)
 - **Missing functions:** _none_
-- **Types:** 3/3 matched (target 10)
+- **Types:** 3/3 matched (target 6)
 - **Missing types:** _none_
 
 ### 7. service.forward
 
 - **Target:** `service.Forward`
-- **Similarity:** 0.81
+- **Similarity:** 0.82
 - **Dependents:** 0
-- **Priority Score:** 901.9
+- **Priority Score:** 901.8
 - **Functions:** 4/4 matched (target 6)
 - **Missing functions:** _none_
-- **Types:** 5/5 matched (target 11)
+- **Types:** 5/5 matched (target 10)
 - **Missing types:** _none_
 
 ### 8. service.select
