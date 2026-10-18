@@ -16,10 +16,6 @@ import io.github.kotlinmania.ramanet.address.HostWithPort
 import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.native.HiddenFromObjC
 
-/**
- * HTTP version type alias matching upstream `rama_http_types::Version` (`http::Version`).
- */
-public typealias HttpVersion = Version
 
 /**
  * A request to establish a TCP Connection.
