@@ -1,6 +1,5 @@
 // swift-tools-version: 6.0
 import PackageDescription
-
 let package = Package(
     name: "SwiftTestHarness",
     platforms: [.macOS("15.0")],
@@ -15,16 +14,12 @@ let package = Package(
             ],
             swiftSettings: [
                 .unsafeFlags([
-                    "-F", "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
                 ])
             ],
             linkerSettings: [
                 .unsafeFlags([
                     "-L", "../build/swift-test",
                     "-lRamaTcp",
-                    "-F", "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
-                    "-Xlinker", "-rpath", "-Xlinker", "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
-                    "-Xlinker", "-rpath", "-Xlinker", "/Library/Developer/CommandLineTools/Library/Developer/usr/lib",
                 ])
             ]
         ),
